@@ -1,0 +1,20 @@
+# Ignore the config.py file (contains sensitive credentials)
+config.py
+
+# Ignore the data folder (optional, if you don't want to track data files)
+data/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore environment-specific files
+.env
+.venv
+venv/
+
+# Ignore IDE-specific files (e.g., PyCharm, VSCode)
+.idea/
+.vscode/

@@ -187,6 +187,13 @@ def main():
 
     print("Metrics DataFrames saved.")
 
+    # Assign variables to global scope for Spyder's Variable Explorer
+    global df_posts, df_comments, df_post_metrics, df_comment_metrics
+    df_posts = posts_df
+    df_comments = comments_df
+    df_post_metrics = post_metrics
+    df_comment_metrics = comment_metrics
+
 
 if __name__ == "__main__":
     main()

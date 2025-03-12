@@ -98,25 +98,56 @@ post_centric_graph = initialize_graph()
 post_centric_graph = build_graph(posts_df, comments_df, post_centric_graph)
 
 
+def calculate_basic_metrics(graph):
+    """
+    Calculate basic network metrics: number of nodes, number of edges, and the node with the highest degree.
 
-# Step 3: Compute basic metrics
-num_nodes = post_centric_graph.number_of_nodes()
-num_edges = post_centric_graph.number_of_edges()
+    Args:
+        graph (networkx.Graph): The graph to analyze.
 
-print(f"Number of nodes: {num_nodes}")
-print(f"Number of edges: {num_edges}")
+    Returns:
+        dict: A dictionary containing the number of nodes, number of edges, and the node with the highest degree.
+    """
+    num_nodes = graph.number_of_nodes()
+    num_edges = graph.number_of_edges()
+    
+    degrees = dict(graph.degree())
+    max_degree_node = max(degrees, key=degrees.get)
+    max_degree = degrees[max_degree_node]
+    
+    return {
+        'num_nodes': num_nodes,
+        'num_edges': num_edges,
+        'max_degree_node': max_degree_node,
+        'max_degree': max_degree
+    }
 
-# Degree distribution
-degrees = dict(post_centric_graph.degree())
-max_degree_node = max(degrees, key=degrees.get)
-print(f"Node with highest degree: {max_degree_node} ({degrees[max_degree_node]} connections)")
+def visualize_network(graph, title="Post-Centric Network", node_size=20, edge_color="gray", seed=42):
+    """
+    Visualize the network using a spring layout.
 
-# Step 4: Visualize the network
-plt.figure(figsize=(10, 8))
-pos = nx.spring_layout(post_centric_graph, seed=42)  # Layout for visualization
-nx.draw(post_centric_graph, pos, with_labels=False, node_size=20, edge_color="gray")
-plt.title("Post-Centric Network")
-plt.show()
+    Args:
+        graph (networkx.Graph): The graph to visualize.
+        title (str): The title of the plot.
+        node_size (int): Size of the nodes in the visualization.
+        edge_color (str): Color of the edges in the visualization.
+        seed (int): Seed for the layout to ensure reproducibility.
+    """
+    plt.figure(figsize=(10, 8))
+    pos = nx.spring_layout(graph, seed=seed)
+    nx.draw(graph, pos, with_labels=False, node_size=node_size, edge_color=edge_color)
+    plt.title(title)
+    plt.show()
+
+# Example usage
+metrics = calculate_basic_metrics(post_centric_graph)
+print(f"Number of nodes: {metrics['num_nodes']}")
+print(f"Number of edges: {metrics['num_edges']}")
+print(f"Node with highest degree: {metrics['max_degree_node']} ({metrics['max_degree']} connections)")
+
+visualize_network(post_centric_graph)
+
+
 
 
 # Calculate Degree Centrality

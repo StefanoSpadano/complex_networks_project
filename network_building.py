@@ -192,50 +192,67 @@ def create_centrality_dataframe(centralities):
     
     return centrality_df
 
+
+
+def plot_degree_distribution(degree_centralities, bins=50, color="blue", alpha=0.7):
+    """
+    Plot the degree centrality distribution on linear and log scales.
+
+    Args:
+        degree_centralities (list): List of degree centrality values.
+        bins (int): Number of bins for the histogram.
+        color (str): Color of the histogram bars.
+        alpha (float): Transparency of the bars.
+    """
+    # Linear scale plot
+    plt.figure(figsize=(12, 6))
+    plt.hist(degree_centralities, bins=bins, color=color, alpha=alpha)
+    plt.xlabel("Degree Centrality")
+    plt.ylabel("Frequency")
+    plt.title("Degree Centrality Distribution (Linear Scale)")
+    plt.grid(True)
+    plt.show()
+
+    # Log scale plot
+    plt.figure(figsize=(12, 6))
+    plt.hist(degree_centralities, bins=bins, color=color, alpha=alpha, log=True)
+    plt.xlabel("Degree Centrality")
+    plt.ylabel("Log(Frequency)")
+    plt.title("Degree Centrality Distribution (Log Y-Axis)")
+    plt.grid(True)
+    plt.show()
+
+def calculate_degree_statistics(degree_centralities):
+    """
+    Calculate mean, median, and variance of degree centrality.
+
+    Args:
+        degree_centralities (list): List of degree centrality values.
+
+    Returns:
+        dict: A dictionary containing mean, median, and variance.
+    """
+    mean_degree = np.mean(degree_centralities)
+    median_degree = np.median(degree_centralities)
+    variance_degree = np.var(degree_centralities)
+    
+    return {
+        'mean': mean_degree,
+        'median': median_degree,
+        'variance': variance_degree
+    }
+
 # Example usage
 centralities = calculate_centralities(post_centric_graph)
 centrality_df = create_centrality_dataframe(centralities)
 
+degree_centralities = list(centralities['degree'].values())
+plot_degree_distribution(degree_centralities)
+
+degree_stats = calculate_degree_statistics(degree_centralities)
+print(f"Mean: {degree_stats['mean']}, Median: {degree_stats['median']}, Variance: {degree_stats['variance']}")
 
 
-degree_centralities = list(nx.degree_centrality(post_centric_graph).values())
-
-plt.figure(figsize=(12, 6))
-plt.hist(degree_centralities, bins=50, color="blue", alpha=0.7)
-plt.xlabel("Degree Centrality")
-plt.ylabel("Frequency")
-plt.title("Degree Centrality Distribution (Linear Scale)")
-plt.grid(True)
-plt.show()
-
-plt.figure(figsize=(12, 6))
-plt.hist(degree_centralities, bins=50, color="green", alpha=0.7, log=True)
-plt.xlabel("Degree Centrality")
-plt.ylabel("Log(Frequency)")
-plt.title("Degree Centrality Distribution (Log Y-Axis)")
-plt.grid(True)
-plt.show()
-
-mean_degree = np.mean(degree_centralities)
-median_degree = np.median(degree_centralities)
-variance_degree = np.var(degree_centralities)
-print(f"Mean: {mean_degree}, Median: {median_degree}, Variance: {variance_degree}")
-
-
-#better binning for the log distribution under here
-# =============================================================================
-# # Define finer bins for degree centrality
-# bins = np.linspace(0, 0.1, 50)  # 50 bins between 0 and 0.1
-# 
-# # Plot the histogram
-# plt.hist(degree_centralities, bins=bins, edgecolor='k', log=True)
-# plt.xlabel('Degree Centrality')
-# plt.ylabel('Frequency (log scale)')
-# plt.title('Degree Centrality Distribution')
-# plt.grid(True, which="both", linestyle='--', linewidth=0.5)
-# plt.show()
-# 
-# =============================================================================
 
 
 # Compute betweenness centrality

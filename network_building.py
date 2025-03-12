@@ -49,30 +49,55 @@ posts_df, comments_df = load_and_preprocess_data(
 if posts_df is not None and comments_df is not None:
     print("Data loaded and preprocessed successfully!")
 
-# Step 1: Initialize the graph
-post_centric_graph = nx.DiGraph()  # Directed graph for post-comment relationships
 
-# Step 2: Build the graph with comment counts
-for _, post_data in posts_df.iterrows():  # Iterate over each post in posts_df
-    post_id = post_data['post_id']  # Assuming 'post_id' is the unique identifier for posts
-    post_author = post_data['author']
+def initialize_graph():
+    """
+    Initialize a directed graph for post-comment relationships.
+
+    Returns:
+        networkx.DiGraph: An empty directed graph.
+    """
+    return nx.DiGraph()
+
+def build_graph(posts_df, comments_df, graph):
+    """
+    Build the graph by adding nodes and edges based on posts and comments.
+
+    Args:
+        posts_df (pd.DataFrame): DataFrame containing post data.
+        comments_df (pd.DataFrame): DataFrame containing comment data.
+        graph (networkx.DiGraph): The graph to build.
+
+    Returns:
+        networkx.DiGraph: The constructed graph.
+    """
+    for _, post_data in posts_df.iterrows():
+        post_id = post_data['post_id']
+        post_author = post_data['author']
+        
+        # Add the post author as a node
+        graph.add_node(post_author, type='post_author', comment_count=0)
+        
+        # Get commenters for the current post
+        post_comments = comments_df[comments_df['post_id'] == post_id]
+        commenters = post_comments['author']
+        
+        # Add edges between post author and commenters
+        for commenter in commenters:
+            if commenter != '[deleted]':
+                if commenter not in graph:
+                    graph.add_node(commenter, type='commenter', comment_count=1)
+                else:
+                    graph.nodes[commenter]['comment_count'] += 1
+                graph.add_edge(post_author, commenter, weight=1)
     
-    # Add the post author as a node
-    post_centric_graph.add_node(post_author, type='post_author', comment_count=0)  # Initialize comment count
-    
-    # Get commenters for the current post
-    post_comments = comments_df[comments_df['post_id'] == post_id]
-    commenters = post_comments['author']
-    
-    # Add edges between post author and commenters, and track comment counts
-    for commenter in commenters:
-        if commenter != '[deleted]':  # Skip deleted users
-            if commenter not in post_centric_graph:  # If the commenter node doesn't exist, add it
-                post_centric_graph.add_node(commenter, type='commenter', comment_count=1)  # Initialize comment count for commenter
-            else:  # If the commenter node already exists, increment their comment count
-                post_centric_graph.nodes[commenter]['comment_count'] += 1
-                
-            post_centric_graph.add_edge(post_author, commenter, weight=1)  # Add edge with weight
+    return graph
+
+# Example usage
+post_centric_graph = initialize_graph()
+post_centric_graph = build_graph(posts_df, comments_df, post_centric_graph)
+
+
 
 # Step 3: Compute basic metrics
 num_nodes = post_centric_graph.number_of_nodes()

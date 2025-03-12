@@ -148,30 +148,55 @@ print(f"Node with highest degree: {metrics['max_degree_node']} ({metrics['max_de
 visualize_network(post_centric_graph)
 
 
+def calculate_centralities(graph):
+    """
+    Calculate degree, betweenness, and closeness centrality for a graph.
+
+    Args:
+        graph (networkx.Graph): The graph to analyze.
+
+    Returns:
+        dict: A dictionary containing centrality measures.
+    """
+    degree_centrality = nx.degree_centrality(graph)
+    betweenness_centrality = nx.betweenness_centrality(graph)
+    closeness_centrality = nx.closeness_centrality(graph)
+    
+    return {
+        'degree': degree_centrality,
+        'betweenness': betweenness_centrality,
+        'closeness': closeness_centrality
+    }
+
+def create_centrality_dataframe(centralities):
+    """
+    Create a DataFrame from centrality measures and print the top nodes.
+
+    Args:
+        centralities (dict): A dictionary containing centrality measures.
+
+    Returns:
+        pd.DataFrame: A DataFrame with centrality measures for each node.
+    """
+    centrality_df = pd.DataFrame(centralities)
+    
+    # Print top 10 nodes for each centrality measure
+    print("Top 10 nodes by degree centrality:")
+    print(centrality_df.sort_values(by='degree', ascending=False).head(10))
+    
+    print("\nTop 10 nodes by betweenness centrality:")
+    print(centrality_df.sort_values(by='betweenness', ascending=False).head(10))
+    
+    print("\nTop 10 nodes by closeness centrality:")
+    print(centrality_df.sort_values(by='closeness', ascending=False).head(10))
+    
+    return centrality_df
+
+# Example usage
+centralities = calculate_centralities(post_centric_graph)
+centrality_df = create_centrality_dataframe(centralities)
 
 
-# Calculate Degree Centrality
-degree_centrality = nx.degree_centrality(post_centric_graph)
-
-
-# Calculate Betweenness Centrality
-betweenness_centrality = nx.betweenness_centrality(post_centric_graph)
-
-# Calculate Closeness Centrality
-closeness_centrality = nx.closeness_centrality(post_centric_graph)
-
-# Optionally, you can convert centralities into DataFrames for easy analysis
-
-centrality_df = pd.DataFrame({
-    'degree': degree_centrality,
-    'betweenness': betweenness_centrality,
-    'closeness': closeness_centrality
-})
-
-# Show the top 10 highest centrality nodes for each type
-print(centrality_df.sort_values(by='degree', ascending=False).head(10))
-print(centrality_df.sort_values(by='betweenness', ascending=False).head(10))
-print(centrality_df.sort_values(by='closeness', ascending=False).head(10))
 
 degree_centralities = list(nx.degree_centrality(post_centric_graph).values())
 

@@ -253,164 +253,160 @@ degree_stats = calculate_degree_statistics(degree_centralities)
 print(f"Mean: {degree_stats['mean']}, Median: {degree_stats['median']}, Variance: {degree_stats['variance']}")
 
 
+def plot_centrality_distribution(centrality_values, title, xlabel, bins=50, log_scale=True):
+    """
+    Plot the distribution of centrality values.
 
+    Args:
+        centrality_values (list): List of centrality values.
+        title (str): Title of the plot.
+        xlabel (str): Label for the x-axis.
+        bins (int): Number of bins for the histogram.
+        log_scale (bool): Whether to use a log scale for the y-axis.
+    """
+    plt.figure(figsize=(7, 6))
+    plt.hist(centrality_values, bins=bins, density=True, log=log_scale, alpha=0.7)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel('Frequency (log scale)' if log_scale else 'Frequency')
+    plt.grid(True)
+    plt.show()
 
-# Compute betweenness centrality
-betweenness_centrality = nx.betweenness_centrality(post_centric_graph)
+def calculate_summary_statistics(centrality_values):
+    """
+    Calculate mean, median, and variance of centrality values.
 
-# Compute closeness centrality
-closeness_centrality = nx.closeness_centrality(post_centric_graph)
+    Args:
+        centrality_values (list): List of centrality values.
 
-# Convert centrality values to lists (for later plotting)
-betweenness_values = list(betweenness_centrality.values())
-closeness_values = list(closeness_centrality.values())
+    Returns:
+        dict: A dictionary containing mean, median, and variance.
+    """
+    return {
+        'mean': np.mean(centrality_values),
+        'median': np.median(centrality_values),
+        'variance': np.var(centrality_values)
+    }
 
-# Plotting distributions
-plt.figure(figsize=(14, 6))
+def get_top_nodes(centrality_dict, top_n=10):
+    """
+    Get the top nodes based on a centrality measure.
 
-# Betweenness centrality distribution (log-log scale)
-plt.subplot(1, 2, 1)
-plt.hist(betweenness_values, bins=50, density=True, log=True)
-plt.title('Betweenness Centrality Distribution (Log Scale)')
-plt.xlabel('Betweenness Centrality')
-plt.ylabel('Frequency (log scale)')
+    Args:
+        centrality_dict (dict): A dictionary mapping nodes to their centrality values.
+        top_n (int): Number of top nodes to return.
 
-# Closeness centrality distribution (log-log scale)
-plt.subplot(1, 2, 2)
-plt.hist(closeness_values, bins=50, density=True, log=True)
-plt.title('Closeness Centrality Distribution (Log Scale)')
-plt.xlabel('Closeness Centrality')
-plt.ylabel('Frequency (log scale)')
+    Returns:
+        list: A list of tuples (node, centrality) for the top nodes.
+    """
+    return sorted(centrality_dict.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
-plt.tight_layout()
-plt.show()
+def inspect_top_nodes(graph, top_nodes):
+    """
+    Inspect the properties of the top nodes (e.g., post content, commenter activity).
 
-# Summary statistics
-betweenness_mean = np.mean(betweenness_values)
-betweenness_median = np.median(betweenness_values)
-betweenness_variance = np.var(betweenness_values)
+    Args:
+        graph (networkx.Graph): The graph containing node attributes.
+        top_nodes (list): A list of top nodes to inspect.
+    """
+    node_types = {}
+    for node in top_nodes:
+        if 'post' in graph.nodes[node]:  # Check if the node is a post
+            node_types[node] = 'Post'
+        else:
+            node_types[node] = 'Commenter'
 
-closeness_mean = np.mean(closeness_values)
-closeness_median = np.median(closeness_values)
-closeness_variance = np.var(closeness_values)
+    # Create a DataFrame to inspect the top nodes and their types
+    top_nodes_df = pd.DataFrame(list(node_types.items()), columns=['Node', 'Type'])
+    print(top_nodes_df)
 
-print("Betweenness Centrality - Mean: ", betweenness_mean)
-print("Betweenness Centrality - Median: ", betweenness_median)
-print("Betweenness Centrality - Variance: ", betweenness_variance)
+    # Print additional details for each top node
+    for node in top_nodes:
+        if node_types[node] == 'Post':
+            post_data = graph.nodes[node]
+            print(f"Post Node: {node}, Content: {post_data.get('content', 'No content available')}")
+        else:
+            commenter_data = graph.nodes[node]
+            print(f"Commenter Node: {node}, Comments Count: {commenter_data.get('comment_count', 0)}")
 
-print("\nCloseness Centrality - Mean: ", closeness_mean)
-print("Closeness Centrality - Median: ", closeness_median)
-print("Closeness Centrality - Variance: ", closeness_variance)
+def plot_centrality_by_type(graph, centrality_dict, node_type_attr='type', title_prefix='', bins=30):
+    """
+    Plot centrality distributions separately for posts and commenters.
 
+    Args:
+        graph (networkx.Graph): The graph containing node attributes.
+        centrality_dict (dict): A dictionary mapping nodes to their centrality values.
+        node_type_attr (str): The node attribute used to distinguish posts and commenters.
+        title_prefix (str): Prefix for the plot title.
+        bins (int): Number of bins for the histogram.
+    """
+    post_centrality = []
+    commenter_centrality = []
 
-# Let's assume you already have 'post_centric_graph' and the centrality measures calculated
-# Let's first get the top nodes for each centrality measure (Degree, Betweenness, Closeness)
+    for node, centrality in centrality_dict.items():
+        if graph.nodes[node].get(node_type_attr) == 'post_author':
+            post_centrality.append(centrality)
+        elif graph.nodes[node].get(node_type_attr) == 'commenter':
+            commenter_centrality.append(centrality)
 
-# For Degree Centrality
-degree_centrality = nx.degree_centrality(post_centric_graph)
-degree_sorted = sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)
-top_degree_nodes = degree_sorted[:10]  # Top 10 nodes
+    plt.figure(figsize=(12, 6))
 
-# For Betweenness Centrality
-betweenness_centrality = nx.betweenness_centrality(post_centric_graph)
-betweenness_sorted = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)
-top_betweenness_nodes = betweenness_sorted[:10]  # Top 10 nodes
+    # Post centrality histogram
+    plt.subplot(1, 2, 1)
+    plt.hist(post_centrality, bins=bins, color='b', alpha=0.7)
+    plt.title(f"{title_prefix} Centrality Distribution for Posts")
+    plt.xlabel(f"{title_prefix} Centrality")
+    plt.ylabel('Frequency')
 
-# For Closeness Centrality
-closeness_centrality = nx.closeness_centrality(post_centric_graph)
-closeness_sorted = sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)
-top_closeness_nodes = closeness_sorted[:10]  # Top 10 nodes
+    # Commenter centrality histogram
+    plt.subplot(1, 2, 2)
+    plt.hist(commenter_centrality, bins=bins, color='g', alpha=0.7)
+    plt.title(f"{title_prefix} Centrality Distribution for Commenters")
+    plt.xlabel(f"{title_prefix} Centrality")
+    plt.ylabel('Frequency')
 
-# Combine the top nodes from all measures
+    plt.tight_layout()
+    plt.show()
+
+# Example usage
+centralities = calculate_centralities(post_centric_graph)
+
+# Plot betweenness and closeness centrality distributions
+plot_centrality_distribution(list(centralities['betweenness'].values()), 
+                             'Betweenness Centrality Distribution (Log Scale)', 
+                             'Betweenness Centrality')
+
+plot_centrality_distribution(list(centralities['closeness'].values()), 
+                             'Closeness Centrality Distribution (Log Scale)', 
+                             'Closeness Centrality')
+
+# Calculate summary statistics
+betweenness_stats = calculate_summary_statistics(list(centralities['betweenness'].values()))
+closeness_stats = calculate_summary_statistics(list(centralities['closeness'].values()))
+
+print("Betweenness Centrality - Mean: ", betweenness_stats['mean'])
+print("Betweenness Centrality - Median: ", betweenness_stats['median'])
+print("Betweenness Centrality - Variance: ", betweenness_stats['variance'])
+
+print("\nCloseness Centrality - Mean: ", closeness_stats['mean'])
+print("Closeness Centrality - Median: ", closeness_stats['median'])
+print("Closeness Centrality - Variance: ", closeness_stats['variance'])
+
+# Get top nodes for each centrality measure
+top_degree_nodes = get_top_nodes(centralities['degree'])
+top_betweenness_nodes = get_top_nodes(centralities['betweenness'])
+top_closeness_nodes = get_top_nodes(centralities['closeness'])
+
+# Combine top nodes and inspect their properties
 top_nodes = set([node for node, _ in top_degree_nodes + top_betweenness_nodes + top_closeness_nodes])
+inspect_top_nodes(post_centric_graph, top_nodes)
 
-# Inspect the type of each top node (Post or Commenter)
-node_types = {}
-
-for node in top_nodes:
-    # Check if the node represents a post or a comment (depending on how the data is structured)
-    if 'post' in post_centric_graph.nodes[node]:  # You can change this based on your node attributes
-        node_types[node] = 'Post'
-    else:
-        node_types[node] = 'Commenter'
-
-# Create a DataFrame to inspect the top nodes and their types
-top_nodes_df = pd.DataFrame(list(node_types.items()), columns=['Node', 'Type'])
-print(top_nodes_df)
-
-# Now you can inspect the nodes more closely by retrieving their properties:
-# For example, check the post content or the commenter activity:
-
-for node in top_nodes:
-    if node_types[node] == 'Post':
-        post_data = post_centric_graph.nodes[node]  # Retrieve post data (e.g., content, number of comments)
-        print(f"Post Node: {node}, Content: {post_data.get('content', 'No content available')}")
-    else:
-        commenter_data = post_centric_graph.nodes[node]  # Retrieve commenter data (e.g., number of comments)
-        print(f"Commenter Node: {node}, Comments Count: {commenter_data.get('comment_count', 0)}")
-        
-import matplotlib.pyplot as plt
-
-# Extract degree centrality for posts and commenters
-post_degree_centrality = {}
-commenter_degree_centrality = {}
-
-for node, centrality in degree_centrality.items():
-    if post_centric_graph.nodes[node].get('type') == 'post_author':
-        post_degree_centrality[node] = centrality
-    elif post_centric_graph.nodes[node].get('type') == 'commenter':
-        commenter_degree_centrality[node] = centrality
-
-# Plot degree centrality distributions for posts and commenters
-plt.figure(figsize=(12, 6))
-
-# Post degree centrality histogram
-plt.subplot(1, 2, 1)
-plt.hist(list(post_degree_centrality.values()), bins=30, color='b', alpha=0.7)
-plt.title("Degree Centrality Distribution for Posts")
-plt.xlabel('Degree Centrality')
-plt.ylabel('Frequency')
-
-# Commenter degree centrality histogram
-plt.subplot(1, 2, 2)
-plt.hist(list(commenter_degree_centrality.values()), bins=30, color='g', alpha=0.7)
-plt.title("Degree Centrality Distribution for Commenters")
-plt.xlabel('Degree Centrality')
-plt.ylabel('Frequency')
-
-plt.tight_layout()
-plt.show()
+# Plot centrality distributions by type (posts vs. commenters)
+plot_centrality_by_type(post_centric_graph, centralities['degree'], title_prefix='Degree')
+plot_centrality_by_type(post_centric_graph, centralities['betweenness'], title_prefix='Betweenness')
+plot_centrality_by_type(post_centric_graph, centralities['closeness'], title_prefix='Closeness')
 
 
-# Extract betweenness centrality for posts and commenters
-post_betweenness_centrality = {}
-commenter_betweenness_centrality = {}
-
-for node, centrality in betweenness_centrality.items():
-    if post_centric_graph.nodes[node].get('type') == 'post_author':
-        post_betweenness_centrality[node] = centrality
-    elif post_centric_graph.nodes[node].get('type') == 'commenter':
-        commenter_betweenness_centrality[node] = centrality
-
-# Plot betweenness centrality distributions for posts and commenters
-plt.figure(figsize=(12, 6))
-
-# Post betweenness centrality histogram
-plt.subplot(1, 2, 1)
-plt.hist(list(post_betweenness_centrality.values()), bins=30, color='b', alpha=0.7)
-plt.title("Betweenness Centrality Distribution for Posts")
-plt.xlabel('Betweenness Centrality')
-plt.ylabel('Frequency')
-
-# Commenter betweenness centrality histogram
-plt.subplot(1, 2, 2)
-plt.hist(list(commenter_betweenness_centrality.values()), bins=30, color='g', alpha=0.7)
-plt.title("Betweenness Centrality Distribution for Commenters")
-plt.xlabel('Betweenness Centrality')
-plt.ylabel('Frequency')
-
-plt.tight_layout()
-plt.show()
 
 # Step 1: Initialize the bipartite graph
 bipartite_graph = nx.Graph()

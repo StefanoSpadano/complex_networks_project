@@ -9,6 +9,7 @@ Created on Thu Mar 13 11:27:09 2025
 import networkx as nx
 import pandas as pd
 
+
 def build_interaction_graph(posts_df, comments_df):
     """
     Constructs a directed graph where:
@@ -64,6 +65,69 @@ print(f"Number of nodes: {interaction_graph.number_of_nodes()}")
 print(f"Number of edges: {interaction_graph.number_of_edges()}")
 
 
+def compute_network_metrics(G):
+    """
+    Computes basic network metrics including centralities and degree distribution.
+
+    Args:
+        G (nx.Graph or nx.DiGraph): The interaction graph.
+
+    Returns:
+        dict: A dictionary containing network statistics.
+    """
+    # Compute centrality measures
+    degree_centrality = nx.degree_centrality(G)
+    betweenness_centrality = nx.betweenness_centrality(G)
+    closeness_centrality = nx.closeness_centrality(G)
+
+    # Store results in a dictionary
+    network_stats = {
+        "num_nodes": G.number_of_nodes(),
+        "num_edges": G.number_of_edges(),
+        "degree_centrality": degree_centrality,
+        "betweenness_centrality": betweenness_centrality,
+        "closeness_centrality": closeness_centrality
+    }
+
+    return network_stats
+
+def get_top_nodes(centrality_dict, top_n=10):
+    """
+    Retrieves the top N nodes based on a given centrality measure.
+
+    Args:
+        centrality_dict (dict): Centrality values for each node.
+        top_n (int): Number of top nodes to retrieve.
+
+    Returns:
+        list: Top N nodes sorted by centrality.
+    """
+    return sorted(centrality_dict.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+# Compute metrics
+network_stats = compute_network_metrics(interaction_graph)
+
+# Display basic network info
+print(f"Number of nodes: {network_stats['num_nodes']}")
+print(f"Number of edges: {network_stats['num_edges']}")
+
+# Get top 10 nodes by centrality
+top_degree = get_top_nodes(network_stats["degree_centrality"])
+top_betweenness = get_top_nodes(network_stats["betweenness_centrality"])
+top_closeness = get_top_nodes(network_stats["closeness_centrality"])
+
+# Print top influential nodes
+print("\nTop 10 Nodes by Degree Centrality:")
+for node, value in top_degree:
+    print(f"{node}: {value:.4f}")
+
+print("\nTop 10 Nodes by Betweenness Centrality:")
+for node, value in top_betweenness:
+    print(f"{node}: {value:.4f}")
+
+print("\nTop 10 Nodes by Closeness Centrality:")
+for node, value in top_closeness:
+    print(f"{node}: {value:.4f}")
 
 
 

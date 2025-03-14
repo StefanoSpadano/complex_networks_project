@@ -413,3 +413,47 @@ for _, comment in df_filtered_comments.iterrows():
 propagator = SentimentPropagator(bipartite_graph)
 sentiment_evolution = propagator.propagate()
 propagator.plot_sentiment_evolution(sentiment_evolution)
+
+
+def compute_sentiment_flow(graph, partition):
+    """Compute sentiment flow between communities."""
+    # Ensure all nodes are in the partition
+    full_partition = {node: partition.get(node, -1) for node in graph.nodes()}
+    
+    # Get unique communities
+    communities = sorted(set(full_partition.values()))
+    flow_matrix = np.zeros((len(communities), len(communities)))
+    
+    # Compute flow between communities
+    for u, v, data in graph.edges(data=True):
+        comm_u = full_partition[u]
+        comm_v = full_partition[v]
+        if comm_u != comm_v and data.get('sentiment', 0) != 0:
+            flow_matrix[comm_u, comm_v] += data['sentiment']
+    
+    return flow_matrix
+
+def plot_sentiment_flow(flow_matrix):
+    """Visualize sentiment flow as a heatmap."""
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(flow_matrix, annot=True, cmap='coolwarm', fmt=".1f")
+    plt.title("Inter-Community Sentiment Flow")
+    plt.xlabel("Target Community")
+    plt.ylabel("Source Community")
+    plt.show()
+    
+def detect_communities(graph):
+    """Detect communities with all nodes included."""
+    # Get the largest connected component for Louvain
+    largest_cc = max(nx.connected_components(graph), key=len)
+    subgraph = graph.subgraph(largest_cc)
+    partition = community_louvain.best_partition(subgraph)
+    
+    # Assign community -1 to nodes not in the largest component
+    full_partition = {node: partition.get(node, -1) for node in graph.nodes()}
+    return full_partition
+
+partition = detect_communities(bipartite_graph)
+flow_matrix = compute_sentiment_flow(bipartite_graph, partition)
+plot_sentiment_flow(flow_matrix)
+

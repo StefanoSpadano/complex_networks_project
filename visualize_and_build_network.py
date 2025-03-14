@@ -327,3 +327,89 @@ plt.legend(handles=[
 plt.title("Bipartite Graph with Highlighted Top Nodes")
 plt.axis("off")
 plt.show()
+
+
+# Add to imports
+from collections import defaultdict
+import random
+
+class SentimentPropagator:
+    def __init__(self, graph, resistance_prob=0.1, flip_prob=0.05):
+        self.graph = graph
+        self.resistance_prob = resistance_prob
+        self.flip_prob = flip_prob
+        self._initialize_sentiments()
+        
+    def _initialize_sentiments(self):
+        """Initialize sentiment values for all nodes."""
+        sentiments = {}
+        for node, data in self.graph.nodes(data=True):
+            if data.get('type') == 'commenter':
+                # Use average sentiment of comments for commenters
+                edges = self.graph.edges(node, data=True)
+                sentiment = np.mean([d.get('sentiment', 0) for _, _, d in edges])
+                sentiments[node] = np.sign(sentiment)  # Convert to -1, 0, 1
+            else:
+                # Posts get neutral sentiment by default
+                sentiments[node] = 0
+        nx.set_node_attributes(self.graph, sentiments, 'sentiment')
+        self.initial_sentiments = sentiments.copy()
+        
+    def propagate(self, max_steps=20):
+        sentiment_over_time = []
+        current_sentiments = self.initial_sentiments.copy()
+        
+        for step in range(max_steps):
+            new_sentiments = {}
+            for node in self.graph.nodes():
+                if random.random() < self.resistance_prob:
+                    new_sentiments[node] = current_sentiments[node]
+                    continue
+                
+                if random.random() < self.flip_prob:
+                    new_sentiments[node] = random.choice([-1, 0, 1])
+                    continue
+                
+                neighbors = list(self.graph.neighbors(node))
+                if not neighbors:
+                    new_sentiments[node] = current_sentiments[node]
+                    continue
+                
+                neighbor_sentiments = [current_sentiments[n] for n in neighbors 
+                                     if n in current_sentiments]
+                if neighbor_sentiments:
+                    new_sentiment = np.mean(neighbor_sentiments)
+                    new_sentiments[node] = np.sign(new_sentiment)  # Keep as -1, 0, 1
+                else:
+                    new_sentiments[node] = current_sentiments[node]
+            
+            current_sentiments = new_sentiments
+            sentiment_over_time.append(Counter(current_sentiments.values()))
+            
+            if step > 1 and sentiment_over_time[-1] == sentiment_over_time[-2]:
+                break
+        
+        return sentiment_over_time
+
+    def plot_sentiment_evolution(self, sentiment_over_time):
+        plt.figure(figsize=(10, 6))
+        for sentiment, values in zip([-1, 0, 1], zip(*sentiment_over_time)):
+            plt.plot(values, label=['Negative', 'Neutral', 'Positive'][sentiment + 1])
+        
+        plt.xlabel("Time Step")
+        plt.ylabel("Proportion of Sentiments")
+        plt.title("Sentiment Propagation Over Time")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
+# When building the bipartite graph
+for _, comment in df_filtered_comments.iterrows():
+    sentiment = comment['sentiment_body']  # Ensure this column exists
+    bipartite_graph.add_edge(comment['post_id'], comment['author'], 
+                            sentiment=sentiment)
+
+propagator = SentimentPropagator(bipartite_graph)
+sentiment_evolution = propagator.propagate()
+propagator.plot_sentiment_evolution(sentiment_evolution)

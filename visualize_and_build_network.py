@@ -8,6 +8,7 @@ Created on Thu Mar 13 11:27:09 2025
 
 import networkx as nx
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def build_interaction_graph(posts_df, comments_df):
@@ -128,7 +129,73 @@ for node, value in top_betweenness:
 print("\nTop 10 Nodes by Closeness Centrality:")
 for node, value in top_closeness:
     print(f"{node}: {value:.4f}")
+    
 
+
+def custom_layout(G, scale=3, k=0.15, iterations=50, seed=42):
+    """
+    Places post_author nodes in a circle, then runs a spring layout
+    with those positions fixed, so commenters arrange around them.
+
+    Args:
+        G (nx.Graph or nx.DiGraph): Your network (posts + commenters).
+        scale (float): Scale for the initial circle layout of posts.
+        k (float): Optimal distance between nodes in the spring layout.
+        iterations (int): Number of spring layout iterations.
+        seed (int): Random seed for reproducibility.
+
+    Returns:
+        dict: A dictionary mapping each node to a 2D position.
+    """
+    # 1) Convert to undirected if needed
+    if isinstance(G, nx.DiGraph):
+        G_undirected = G.to_undirected()
+    else:
+        G_undirected = G
+
+    # 2) Separate out the posts
+    posts = [n for n, d in G_undirected.nodes(data=True) if d.get('type') == 'post_author']
+    
+    # 3) Create a subgraph with just the posts
+    post_subgraph = G_undirected.subgraph(posts)
+    
+    # 4) Place posts in a circle
+    pos_posts = nx.circular_layout(post_subgraph, scale=scale, center=(0, 0))
+
+    # 5) Run spring layout for the entire graph, pinning the posts
+    #    so they remain in a circle
+    pos = nx.spring_layout(
+        G_undirected,
+        pos=pos_posts,       # start with the circular positions
+        fixed=posts,         # don't move the posts
+        k=k,
+        iterations=iterations,
+        seed=seed
+    )
+    
+    return pos
+
+
+# 1) Build your graph as before
+# interaction_graph = build_interaction_graph(posts_df, comments_df) 
+# (Make sure it has node attribute 'type' == 'post_author' for posts, 'commenter' for others)
+
+# 2) Generate the layout
+pos_dict = custom_layout(interaction_graph, scale=3, k=0.15, iterations=50, seed=42)
+
+# 3) Separate posts and commenters for coloring
+posts = [n for n, d in interaction_graph.nodes(data=True) if d.get('type') == 'post_author']
+commenters = [n for n, d in interaction_graph.nodes(data=True) if d.get('type') == 'commenter']
+
+# 4) Plot
+plt.figure(figsize=(12, 12))
+nx.draw_networkx_nodes(interaction_graph, pos_dict, nodelist=posts, node_color='red', node_size=100, label="Posts")
+nx.draw_networkx_nodes(interaction_graph, pos_dict, nodelist=commenters, node_color='blue', node_size=30, label="Commenters")
+nx.draw_networkx_edges(interaction_graph, pos_dict, alpha=0.4, edge_color="black")
+plt.legend()
+plt.title("Donut-Shaped Network Layout")
+plt.axis("off")
+plt.show()
 
 
 

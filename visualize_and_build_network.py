@@ -293,3 +293,37 @@ plt.legend()
 plt.title("Bipartite Graph with Communities")
 plt.axis("off")
 plt.show()
+
+# Get top 10% of nodes by degree centrality
+degree_centrality = nx.degree_centrality(bipartite_graph)
+top_10_percent = int(len(bipartite_graph.nodes) * 0.1)
+top_nodes = sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)[:top_10_percent]
+top_node_ids = [node for node, _ in top_nodes]
+
+# Assign larger size and different color to top nodes
+node_sizes = [100 if node in top_node_ids else 30 for node in bipartite_graph.nodes]
+node_colors_top = ['orange' if node in top_node_ids else community_colors[partition[node]] for node in bipartite_graph.nodes]
+
+# Visualize the bipartite graph with highlighted top nodes
+plt.figure(figsize=(12, 12))
+
+# Draw all nodes with community coloring
+nx.draw_networkx_nodes(
+    bipartite_graph, pos,
+    node_color=node_colors_top,
+    node_size=node_sizes,
+)
+
+# Draw edges
+nx.draw_networkx_edges(bipartite_graph, pos, alpha=0.4, edge_color="gray")
+
+# Add legend
+plt.legend(handles=[
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label='Top 10% Nodes'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Commenters'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Posts')
+])
+
+plt.title("Bipartite Graph with Highlighted Top Nodes")
+plt.axis("off")
+plt.show()

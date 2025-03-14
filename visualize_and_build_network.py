@@ -199,162 +199,97 @@ plt.show()
 
 
 
-# =============================================================================
-# # -*- coding: utf-8 -*-
-# """
-# Script for analyzing and visualizing a bipartite network of Reddit posts and comments.
-# """
-# 
-# import pandas as pd
-# import networkx as nx
-# import matplotlib.pyplot as plt
-# import numpy as np
-# 
-# # ------------------------------
-# # Data Loading and Preprocessing
-# # ------------------------------
-# 
-# def load_and_preprocess_data(posts_path, comments_path):
-#     """
-#     Load and preprocess the posts and comments data.
-# 
-#     Args:
-#         posts_path (str): Path to the posts CSV file.
-#         comments_path (str): Path to the comments CSV file.
-# 
-#     Returns:
-#         tuple: A tuple containing the preprocessed posts and comments DataFrames.
-#     """
-#     posts_df = pd.read_csv(posts_path)
-#     comments_df = pd.read_csv(comments_path)
-# 
-#     # Preprocess posts data
-#     posts_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)
-#     posts_df['selftext'].fillna('', inplace=True)
-# 
-#     # Preprocess comments data
-#     comments_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)
-# 
-#     return posts_df, comments_df
-# 
-# # Load the data
-# posts_df, comments_df = load_and_preprocess_data(
-#     "../data/onepiece_posts.csv",
-#     "../data/onepiece_comments.csv"
-# )
-# 
-# # ------------------------------
-# # Graph Construction
-# # ------------------------------
-# 
-# # Build the bipartite graph
-# bipartite_graph = nx.Graph()
-# 
-# for _, post_data in posts_df.iterrows():
-#     post_id = post_data['post_id']
-#     post_author = post_data['author']
-#     
-#     # Add post as a node
-#     bipartite_graph.add_node(post_id, bipartite=0, author=post_author)
-#     
-#     # Get commenters for the current post
-#     post_comments = comments_df[comments_df['post_id'] == post_id]
-#     commenters = post_comments['author']
-#     
-#     # Add commenters as nodes
-#     for commenter in commenters:
-#         if commenter != '[deleted]':
-#             bipartite_graph.add_node(commenter, bipartite=1)
-#             bipartite_graph.add_edge(post_id, commenter)
-# 
-# # Analyze the bipartite graph
-# post_nodes = [node for node, data in bipartite_graph.nodes(data=True) if data['bipartite'] == 0]
-# commenter_nodes = [node for node, data in bipartite_graph.nodes(data=True) if data['bipartite'] == 1]
-# 
-# print(f"Number of post nodes: {len(post_nodes)}")
-# print(f"Number of commenter nodes: {len(commenter_nodes)}")
-# 
-# # ------------------------------
-# # Visualization
-# # ------------------------------
-# 
-# def visualize_network(graph, node_color_attr=None, node_size=20, edge_color="gray", title="Network", seed=42):
-#     """
-#     Visualize a network with optional node coloring.
-# 
-#     Args:
-#         graph (networkx.Graph): The graph to visualize.
-#         node_color_attr (str): Node attribute to use for coloring (optional).
-#         node_size (int): Size of the nodes.
-#         edge_color (str): Color of the edges.
-#         title (str): Title of the plot.
-#         seed (int): Seed for the layout to ensure reproducibility.
-#     """
-#     pos = nx.spring_layout(graph, seed=seed)
-#     node_colors = None
-# 
-#     if node_color_attr:
-#         node_colors = [data.get(node_color_attr, 0) for _, data in graph.nodes(data=True)]
-# 
-#     plt.figure(figsize=(10, 8))
-#     nx.draw(
-#         graph,
-#         pos,
-#         node_color=node_colors,
-#         node_size=node_size,
-#         edge_color=edge_color,
-#         with_labels=False,
-#         cmap=plt.cm.rainbow if node_color_attr else None
-#     )
-#     plt.title(title)
-#     plt.show()
-# 
-# # Visualize the bipartite graph
-# visualize_network(
-#     bipartite_graph,
-#     node_color_attr='bipartite',
-#     node_size=50,
-#     title="Bipartite Graph: Posts and Commenters"
-# )
-# 
-# # ------------------------------
-# # Centrality Analysis
-# # ------------------------------
-# 
-# # Calculate centrality measures
-# degree_centrality = nx.degree_centrality(bipartite_graph)
-# betweenness_centrality = nx.betweenness_centrality(bipartite_graph)
-# closeness_centrality = nx.closeness_centrality(bipartite_graph)
-# 
-# # Plot centrality distributions
-# plt.figure(figsize=(14, 6))
-# 
-# # Degree centrality distribution
-# plt.subplot(1, 3, 1)
-# plt.hist(list(degree_centrality.values()), bins=50, color="blue", alpha=0.7)
-# plt.title("Degree Centrality Distribution")
-# plt.xlabel("Degree Centrality")
-# plt.ylabel("Frequency")
-# 
-# # Betweenness centrality distribution
-# plt.subplot(1, 3, 2)
-# plt.hist(list(betweenness_centrality.values()), bins=50, color="green", alpha=0.7)
-# plt.title("Betweenness Centrality Distribution")
-# plt.xlabel("Betweenness Centrality")
-# plt.ylabel("Frequency")
-# 
-# # Closeness centrality distribution
-# plt.subplot(1, 3, 3)
-# plt.hist(list(closeness_centrality.values()), bins=50, color="red", alpha=0.7)
-# plt.title("Closeness Centrality Distribution")
-# plt.xlabel("Closeness Centrality")
-# plt.ylabel("Frequency")
-# 
-# plt.tight_layout()
-# plt.show()
-# 
-# # Print summary statistics
-# print("Degree Centrality - Mean:", np.mean(list(degree_centrality.values())))
-# print("Betweenness Centrality - Mean:", np.mean(list(betweenness_centrality.values())))
-# print("Closeness Centrality - Mean:", np.mean(list(closeness_centrality.values())))
-# =============================================================================
+import numpy as np
+from community import community_louvain  # For community detection
+
+# Load data
+posts_df = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv")
+df_filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv")  # Use the filtered comments DataFrame
+
+# Preprocess data
+posts_df.dropna(subset=['author_x', 'post_id'], inplace=True)
+df_filtered_comments.dropna(subset=['author', 'post_id'], inplace=True)
+df_filtered_comments = df_filtered_comments[df_filtered_comments['author'] != '[deleted]']
+
+# Build bipartite graph
+bipartite_graph = nx.Graph()
+
+# Add post nodes
+for _, post in posts_df.iterrows():
+    post_id = post['post_id']
+    post_author = post['author_x']
+    
+    # Add or update post node with 'bipartite' attribute
+    bipartite_graph.add_node(post_id, bipartite=0, type='post', author=post_author)
+
+# Add commenter nodes and edges
+for _, comment in df_filtered_comments.iterrows():  # Use df_filtered_comments here
+    post_id = comment['post_id']
+    commenter = comment['author']
+    sentiment = comment['sentiment_body']  # Use the sentiment_body column
+    
+    # Add or update commenter node with 'bipartite' attribute
+    bipartite_graph.add_node(commenter, bipartite=1, type='commenter')
+    
+    # Add edge between post and commenter
+    bipartite_graph.add_edge(post_id, commenter, sentiment=sentiment)
+
+# Debug: Print nodes and their attributes
+for node, data in bipartite_graph.nodes(data=True):
+    print(f"Node: {node}, Attributes: {data}")
+
+# Separate post and commenter nodes
+post_nodes = [n for n, d in bipartite_graph.nodes(data=True) if d.get('bipartite') == 0]
+commenter_nodes = [n for n, d in bipartite_graph.nodes(data=True) if d.get('bipartite') == 1]
+
+print(f"Number of post nodes: {len(post_nodes)}")
+print(f"Number of commenter nodes: {len(commenter_nodes)}")
+
+# Detect communities using Louvain method
+partition = community_louvain.best_partition(bipartite_graph)
+
+# Add community information to nodes
+for node, community in partition.items():
+    bipartite_graph.nodes[node]['community'] = community
+
+# Get unique communities and assign colors
+communities = set(partition.values())
+print(f"Number of communities detected: {len(communities)}")
+
+# Assign a color to each community
+community_colors = {community: plt.cm.tab20(i) for i, community in enumerate(communities)}
+
+# Assign colors to nodes based on their community
+node_colors = [community_colors[partition[node]] for node in bipartite_graph.nodes]
+
+# Visualize the bipartite graph with community coloring
+pos = nx.spring_layout(bipartite_graph, seed=42)
+
+plt.figure(figsize=(12, 12))
+
+# Draw post nodes (red) with community coloring
+nx.draw_networkx_nodes(
+    bipartite_graph, pos,
+    nodelist=post_nodes,
+    node_color=[community_colors[partition[node]] for node in post_nodes],
+    node_size=100,
+    label="Posts"
+)
+
+# Draw commenter nodes (blue) with community coloring
+nx.draw_networkx_nodes(
+    bipartite_graph, pos,
+    nodelist=commenter_nodes,
+    node_color=[community_colors[partition[node]] for node in commenter_nodes],
+    node_size=30,
+    label="Commenters"
+)
+
+# Draw edges
+nx.draw_networkx_edges(bipartite_graph, pos, alpha=0.4, edge_color="gray")
+
+# Add legend
+plt.legend()
+plt.title("Bipartite Graph with Communities")
+plt.axis("off")
+plt.show()

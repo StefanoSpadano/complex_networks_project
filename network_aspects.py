@@ -405,12 +405,10 @@ plt.ylabel('')
 plt.show()
 
 
-import networkx as nx
-import pandas as pd
+
 from collections import Counter
 import random
-import matplotlib.pyplot as plt
-import numpy as np
+
 
 # Set random seeds for reproducibility
 random.seed(42)
@@ -533,3 +531,304 @@ for t in range(1, len(sentiment_evolution)):
         break
 
 print("The system has reached convergence." if converged else "The system has NOT converged yet.")
+
+
+import copy
+
+
+# ===== Step 1: Shift Edge Weights for Community Detection =====
+def shift_edge_weights(graph):
+    """
+    Shift edge weights to make them non-negative for community detection.
+    
+    Args:
+        graph (nx.Graph): The input graph with potentially negative edge weights.
+    
+    Returns:
+        nx.Graph: A copy of the graph with shifted edge weights.
+    """
+    shifted_graph = copy.deepcopy(graph)
+    min_weight = min(d['weight'] for _, _, d in shifted_graph.edges(data=True))
+    for u, v, d in shifted_graph.edges(data=True):
+        d['weight'] += abs(min_weight)
+    return shifted_graph
+
+# Shift edge weights and perform community detection
+shifted_graph = shift_edge_weights(commenter_graph)
+partition = community_louvain.best_partition(shifted_graph)
+
+# Analyze and print community sizes
+community_sizes = Counter(partition.values())
+print("Community Sizes (number of nodes per community):")
+for community, size in community_sizes.items():
+    print(f"Community {community}: {size} nodes")
+
+# Assign communities as node attributes for further analysis
+nx.set_node_attributes(commenter_graph, partition, name='community')
+
+# ===== Step 2: Analyze Sentiment Distribution per Community =====
+def analyze_community_sentiments(graph, partition):
+    """
+    Analyze sentiment distribution for each community.
+    
+    Args:
+        graph (nx.Graph): The graph with node sentiments.
+        partition (dict): A dictionary mapping nodes to their communities.
+    
+    Returns:
+        dict: A dictionary mapping communities to their sentiment distributions.
+    """
+    community_sentiments = {c: Counter() for c in set(partition.values())}
+    for node, community in partition.items():
+        sentiment = graph.nodes[node]['sentiment']
+        community_sentiments[community][sentiment] += 1
+    return community_sentiments
+
+# Populate and print sentiment distribution per community
+community_sentiments = analyze_community_sentiments(commenter_graph, partition)
+print("Sentiment Distribution per Community:")
+for community, sentiments in community_sentiments.items():
+    total = sum(sentiments.values())
+    print(f"Community {community}:")
+    for sentiment, count in sentiments.items():
+        proportion = count / total
+        label = {1: "Positive", 0: "Neutral", -1: "Negative"}[sentiment]
+        print(f"  {label}: {count} ({proportion:.2%})")
+
+# ===== Step 3: Visualize Communities =====
+def visualize_communities(graph, partition, highlight_nodes=None, title="Commenter Network"):
+    """
+    Visualize the graph with nodes colored by their communities.
+    Optionally highlight specific nodes (e.g., top influencers).
+    
+    Args:
+        graph (nx.Graph): The graph to visualize.
+        partition (dict): A dictionary mapping nodes to their communities.
+        highlight_nodes (set): A set of nodes to highlight (e.g., top influencers).
+        title (str): Title of the plot.
+    """
+    # Assign colors based on communities
+    num_communities = len(set(partition.values()))
+    color_map = plt.cm.rainbow
+    colors = [color_map(i / num_communities) for i in range(num_communities)]
+    community_colors = {community: colors[i] for i, community in enumerate(set(partition.values()))}
+    node_colors = [community_colors[partition[node]] for node in graph.nodes]
+
+    # Assign node sizes based on highlighting
+    node_sizes = [100 if node in highlight_nodes else 30 for node in graph.nodes] if highlight_nodes else 30
+
+    # Create the figure and axes
+    plt.figure(figsize=(12, 12))
+    pos = nx.spring_layout(graph, seed=42)  # Use spring_layout for consistency
+
+    # Draw the graph
+    nx.draw_networkx(
+        graph,
+        pos=pos,
+        with_labels=False,
+        node_size=node_sizes,
+        node_color=node_colors,
+        edge_color='gray',
+        alpha=0.7
+    )
+
+    plt.title(title, fontsize=16)
+    plt.show()
+
+# Visualize the full graph with communities
+visualize_communities(commenter_graph, partition, title="Commenter Network Colored by Communities")
+
+# ===== Step 4: Analyze Top Influencers (Optimized) =====
+def analyze_top_influencers(graph, top_n=500):
+    """
+    Analyze top influencers in the graph using centrality measures.
+    First, select the top `top_n` nodes by degree centrality.
+    Then, calculate betweenness and eigenvector centrality only for this subset.
+    
+    Args:
+        graph (nx.Graph): The graph to analyze.
+        top_n (int): The number of top nodes to consider.
+    
+    Returns:
+        dict: A dictionary containing top influencers by different centrality measures.
+    """
+    # Step 1: Select top nodes by degree centrality
+    degree_centrality = nx.degree_centrality(graph)
+    top_nodes = sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    top_node_ids = [node for node, _ in top_nodes]
+
+    # Create a subgraph from the top nodes
+    subgraph = graph.subgraph(top_node_ids)
+    print(f"Top Commenters Subgraph: {subgraph.number_of_nodes()} nodes, {subgraph.number_of_edges()} edges")
+
+    # Step 2: Calculate betweenness centrality for the subgraph
+    betweenness_centrality = nx.betweenness_centrality(subgraph, normalized=True)
+    top_betweenness = sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    # Step 3: Calculate eigenvector centrality for the subgraph
+    eigenvector_centrality = nx.eigenvector_centrality(subgraph)
+    top_eigenvector = sorted(eigenvector_centrality.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    # Step 4: Get top degree centrality nodes (already computed)
+    top_degree = top_nodes[:5]
+
+    print("Top Influencers by Degree Centrality:", top_degree)
+    print("Top Influencers by Betweenness Centrality:", top_betweenness)
+    print("Top Influencers by Eigenvector Centrality:", top_eigenvector)
+
+    return {
+        "degree": top_degree,
+        "betweenness": top_betweenness,
+        "eigenvector": top_eigenvector,
+        "subgraph": subgraph
+    }
+
+# Analyze top influencers
+influencers = analyze_top_influencers(commenter_graph, top_n=500)  # Limit to top 500 nodes
+
+# ===== Step 5: Calculate Sentiment Influence Scores =====
+def calculate_sentiment_influence(subgraph):
+    """
+    Calculate sentiment influence scores for nodes in the subgraph.
+    
+    Args:
+        subgraph (nx.Graph): The subgraph to analyze.
+    
+    Returns:
+        dict: A dictionary mapping nodes to their sentiment influence scores.
+    """
+    influence_scores = {node: 0 for node in subgraph.nodes}
+    for node in subgraph.nodes:
+        for neighbor in subgraph.neighbors(node):
+            if subgraph.nodes[node]['sentiment'] == subgraph.nodes[neighbor]['sentiment']:
+                influence_scores[node] += 1
+    return influence_scores
+
+# Get top sentiment influencers
+influence_scores = calculate_sentiment_influence(influencers["subgraph"])
+top_sentiment_influencers = sorted(influence_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+print("Top Influencers by Sentiment Influence:", top_sentiment_influencers)
+
+# ===== Step 6: Visualize Subgraph with Top Nodes Highlighted =====
+top_nodes = {node for node, _ in influencers["degree"] + influencers["betweenness"] + influencers["eigenvector"] + top_sentiment_influencers}
+visualize_communities(influencers["subgraph"], partition, highlight_nodes=top_nodes, title="Top Nodes Highlighted by Community")
+
+
+# ===== Step 1: Compute Modularity Score =====
+def compute_modularity(graph, partition):
+    """
+    Compute the modularity score for the given graph and partition.
+    
+    Args:
+        graph (nx.Graph): The input graph.
+        partition (dict): A dictionary mapping nodes to their communities.
+    
+    Returns:
+        float: The modularity score.
+    """
+    modularity = community_louvain.modularity(partition, graph)
+    print(f"Modularity Score: {modularity}")
+    return modularity
+
+# Compute modularity score
+modularity = compute_modularity(commenter_graph, partition)
+
+# ===== Step 2: Compute Sentiment Flow Matrix =====
+def compute_sentiment_flow_matrix(graph, partition):
+    """
+    Compute the sentiment flow matrix between communities.
+    
+    Args:
+        graph (nx.Graph): The input graph.
+        partition (dict): A dictionary mapping nodes to their communities.
+    
+    Returns:
+        np.ndarray: A matrix where each cell (i, j) represents the sentiment flow from community i to j.
+    """
+    num_communities = len(set(partition.values()))
+    sentiment_flow_matrix = np.zeros((num_communities, num_communities))
+
+    # Iterate over edges in the graph
+    for u, v, d in graph.edges(data=True):
+        community_u = partition[u]
+        community_v = partition[v]
+        weight = d.get('weight', 1)  # Default weight to 1 if not set
+        sentiment_u = graph.nodes[u]['sentiment']
+        sentiment_v = graph.nodes[v]['sentiment']
+
+        # Increment the flow based on sentiment alignment
+        if sentiment_u == sentiment_v:
+            sentiment_flow_matrix[community_u, community_v] += weight
+
+    return sentiment_flow_matrix
+
+# Compute sentiment flow matrix
+sentiment_flow_matrix = compute_sentiment_flow_matrix(commenter_graph, partition)
+
+# Print the sentiment flow matrix
+print("Sentiment Flow Matrix:")
+print(sentiment_flow_matrix)
+
+# ===== Step 3: Visualize Sentiment Flow Matrix =====
+def visualize_sentiment_flow(matrix):
+    """
+    Visualize the sentiment flow matrix as a heatmap.
+    
+    Args:
+        matrix (np.ndarray): The sentiment flow matrix.
+    """
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(matrix, annot=True, fmt=".1f", cmap="coolwarm")
+    plt.title("Sentiment Flow Matrix Heatmap")
+    plt.xlabel("Community")
+    plt.ylabel("Community")
+    plt.show()
+
+# Visualize the sentiment flow matrix
+visualize_sentiment_flow(sentiment_flow_matrix)
+
+# ===== Step 4: Compute Inter and Intra Flow Values =====
+def compute_flow_values(matrix):
+    """
+    Compute inter-community and intra-community flow values.
+    
+    Args:
+        matrix (np.ndarray): The sentiment flow matrix.
+    
+    Returns:
+        tuple: A tuple containing two lists:
+            - inter_flows: List of (i, j, flow) for inter-community flows.
+            - intra_flows: List of (i, flow) for intra-community flows.
+    """
+    num_communities = matrix.shape[0]
+    inter_flows = []
+    intra_flows = []
+
+    for i in range(num_communities):
+        for j in range(num_communities):
+            if i == j:
+                # Intra-community flow
+                intra_flows.append((i, matrix[i, j]))
+            else:
+                # Inter-community flow
+                if matrix[i, j] > 0:
+                    inter_flows.append((i, j, matrix[i, j]))
+
+    # Sort flows by value in descending order
+    inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
+    intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
+
+    return inter_flows, intra_flows
+
+# Compute inter and intra flow values
+inter_flows, intra_flows = compute_flow_values(sentiment_flow_matrix)
+
+# Print top inter-community flows
+print("Top Inter-Community Flows:")
+for i, j, flow in inter_flows[:10]:  # Top 10 flows
+    print(f"Community {i} ↔ Community {j}: {flow:.2f}")
+
+# Print top intra-community flows
+print("Top Intra-Community Flows:")
+for i, flow in intra_flows[:10]:  # Top 10 flows
+    print(f"Community {i}: {flow:.2f}")

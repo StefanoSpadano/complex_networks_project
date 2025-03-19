@@ -60,6 +60,7 @@ jedi @ file:///C:/b/abs_1b8kmj7rrm/croot/jedi_1721058359741/work
 jellyfish @ file:///C:/b/abs_50kgvtnrbj/croot/jellyfish_1695193564091/work
 Jinja2 @ file:///C:/b/abs_92fccttino/croot/jinja2_1716993447201/work
 joblib==1.4.2
+jsonpickle==4.0.2
 jsonschema @ file:///C:/b/abs_394_t6__xq/croot/jsonschema_1728486718320/work
 jsonschema-specifications @ file:///C:/b/abs_0brvm6vryw/croot/jsonschema-specifications_1699032417323/work
 jupyter_client @ file:///C:/b/abs_a6h3c8hfdq/croot/jupyter_client_1699455939372/work
@@ -133,6 +134,7 @@ python-slugify @ file:///tmp/build/80754af9/python-slugify_1620405669636/work
 pytoolconfig @ file:///C:/b/abs_f2j_xsvrpn/croot/pytoolconfig_1701728751207/work
 pytz @ file:///C:/b/abs_6ap4tsz1ox/croot/pytz_1713974360290/work
 pyuca @ file:///C:/b/abs_c4xy4agr42/croot/pyuca_1726251471052/work
+pyvis==0.3.2
 pywin32==305.1
 pywin32-ctypes @ file:///C:/b/abs_2cfx5l4nvi/croot/pywin32-ctypes_1709340246092/work
 PyYAML @ file:///C:/b/abs_14xkfs39bx/croot/pyyaml_1728657968772/work

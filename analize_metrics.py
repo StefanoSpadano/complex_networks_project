@@ -5,13 +5,6 @@ Created on Wed Nov  6 18:24:17 2024
 @author: Raffaele
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov  6 18:24:17 2024
-
-@author: Raffaele
-"""
-
 import pandas as pd
 
 
@@ -42,11 +35,12 @@ def preprocess_data(posts_df, comments_df):
     Returns:
         tuple: A tuple containing two DataFrames (posts_df, comments_df).
     """
-    # Preprocessing for posts_df
+    # Preprocessing for posts_df by removing missing values inside these columns
     posts_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)
-    posts_df['selftext'].fillna('', inplace=True)  # Fill missing post content with an empty string
+    # Fill missing post content with an empty string
+    posts_df['selftext'].fillna('', inplace=True)  
 
-    # Preprocessing for comments_df
+    # Preprocessing for comments_df by removing missing values inside these columns
     comments_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)
 
     return posts_df, comments_df
@@ -187,12 +181,19 @@ def main():
 
     print("Metrics DataFrames saved.")
 
-    # Assign variables to global scope for Spyder's Variable Explorer
-    global df_posts, df_comments, df_post_metrics, df_comment_metrics
-    df_posts = posts_df
-    df_comments = comments_df
-    df_post_metrics = post_metrics
-    df_comment_metrics = comment_metrics
+    USE_GLOBAL_SCOPE = False  # Set to True for Spyder's Variable Explorer
+
+    if USE_GLOBAL_SCOPE:
+       global df_posts, df_comments, df_post_metrics, df_comment_metrics
+       df_posts = posts_df
+       df_comments = comments_df
+       df_post_metrics = post_metrics
+       df_comment_metrics = comment_metrics
+    else:
+       df_posts = posts_df
+       df_comments = comments_df
+       df_post_metrics = post_metrics
+       df_comment_metrics = comment_metrics
 
 
 if __name__ == "__main__":

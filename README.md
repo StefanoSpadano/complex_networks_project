@@ -32,7 +32,7 @@ This project lays a foundation for further targeted investigations into specific
 ```bash
 pip install -r requirements.txt
 ```
-3. Once you have created a Reddit account you can go to (https://www.reddit.com/prefs/apps) and click on:
+3. Once you have created a Reddit account you can go to https://www.reddit.com/prefs/apps and click on:
 
 - "Create an app" or "Create another app";
 
@@ -46,14 +46,14 @@ pip install -r requirements.txt
   
   - leave other fields empty.
 
-After submitting this spaces you will get access to:
+After submitting these spaces you will get access to:
 
 - Client ID (a short alphanumeric string);
 
 - Client secret (a long alphanumeric string).
 
 
-4. A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved in the following way:
+4. A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved into it in the following way:
 ## config.py
 REDDIT_CLIENT_ID = "your-client-id"
 

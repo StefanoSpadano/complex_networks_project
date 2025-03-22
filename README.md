@@ -11,7 +11,18 @@ This small study was an excercise to demonstrate the applicability of network an
 
 This project lays a foundation for further targeted investigations into specific aspects, such as temporal dynamics of sentiment during key One Piece events. It still comes with some limitations such as a limited size for the number of posts obtained, limited perspectives that may be due to the analysis of only one subreddit about this topic, the parameters for the sentiment propagation model were chosen in heuristic way and the sentiment analysis tool is lexycon based. 
 
-## Setup
+---
+
+## Table of contents
+- [Installation](#installation)
+  
+- [Usage](#usage)
+
+- [Examples](#examples)
+
+---
+
+## Installation
 1. **Clone the repository**:
 ```bash
    git clone https://github.com/StefanoSpadano/complex_networks_project.git

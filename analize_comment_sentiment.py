@@ -363,12 +363,17 @@ def main():
 
     # Save filtered comments
     save_filtered_comments(filtered_comments, output_path)
+    USE_GLOBAL_SCOPE = False  # Set to True for Spyder's Variable Explorer
+    
+    if USE_GLOBAL_SCOPE:
+       global df_posts, df_post_metrics, df_sentiment_posts, df_sentiment_clenaed
+       df_comments = comments_df
+       df_filtered_comments = filtered_comments
+    else:
+       df_comments = comments_df
+       df_filtered_comments = filtered_comments
 
-    # Assign variables to global scope for Spyder's Variable Explorer
-    global df_comments, df_filtered_comments, df_top_comments
-    df_comments = comments_df
-    df_filtered_comments = filtered_comments
-    df_top_comments = filtered_comments.sort_values(by="score", ascending=False).head(100)
+   
 
 
 if __name__ == "__main__":

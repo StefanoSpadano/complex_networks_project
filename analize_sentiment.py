@@ -308,13 +308,19 @@ def main():
 
     # Save cleaned data
     save_cleaned_data(sentiment_posts_cleaned, output_path)
+    USE_GLOBAL_SCOPE = False  # Set to True for Spyder's Variable Explorer
 
-    # Assign variables to global scope for Spyder's Variable Explorer
-    global df_posts, df_post_metrics, df_sentiment_posts, df_sentiment_cleaned
-    df_posts = posts_df
-    df_post_metrics = post_metrics
-    df_sentiment_posts = sentiment_posts
-    df_sentiment_cleaned = sentiment_posts_cleaned
+    if USE_GLOBAL_SCOPE:
+       global df_posts, df_post_metrics, df_sentiment_posts, df_sentiment_clenaed
+       df_posts = posts_df
+       df_post_metrics = post_metrics
+       df_sentiment_posts = sentiment_posts
+       df_sentiment_cleaned = sentiment_posts_cleaned
+    else:
+       df_posts = posts_df
+       df_post_metrics = post_metrics
+       df_sentiment_posts = sentiment_posts
+       df_sentiment_cleaned = sentiment_posts_cleaned
 
 
 

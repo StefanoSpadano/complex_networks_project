@@ -9,7 +9,7 @@ Created on Wed Nov  6 12:36:11 2024
 """
 This script is responsible for collecting posts and comments from the OnePiece subreddit
 using the Reddit API (PRAW). The data is then stored in CSV files for further analysis.
-The script is structured into a class-based design to improve modularity and reusability.
+The script is structured into a class-based design for possible modularity and reusability.
 """
 
 import praw
@@ -31,7 +31,7 @@ class RedditDataCollector:
     """
     def __init__(self, client_id, client_secret, user_agent, subreddit_name):
         """
-        Initializes the RedditDataCollector instance with authentication details
+        Initializes the RedditDataCollector instance with authentication details from the config.py file
         and sets the target subreddit for data collection.
         """
         self.reddit = praw.Reddit(
@@ -47,7 +47,8 @@ class RedditDataCollector:
         Uses a search query to retrieve posts that are relevant to the analysis.
         
         Args:
-            target_flairs (list): List of flairs to filter posts by.
+            target_flairs (list): List of flairs to filter posts by. Available flairs are: 
+            Discussion, Theory, Powerscaling, Analysis, Fanart, Cosplay, Media, Merchandise, Big News.
             limit (int): Maximum number of posts to fetch.
         
         Returns:

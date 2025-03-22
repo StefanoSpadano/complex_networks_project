@@ -769,6 +769,8 @@ sentiment_flow_matrix = compute_sentiment_flow_matrix(commenter_graph, partition
 print("Sentiment Flow Matrix:")
 print(sentiment_flow_matrix)
 
+import seaborn as sns
+
 # ===== Step 3: Visualize Sentiment Flow Matrix =====
 def visualize_sentiment_flow(matrix):
     """

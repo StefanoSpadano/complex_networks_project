@@ -78,14 +78,14 @@ if degrees:
     max_degree_node = max(degrees, key=degrees.get)
     print(f"Node with highest degree: {max_degree_node} ({degrees[max_degree_node]} connections)")
 
-# Centrality Measures
+# Centrality Measures first attempt
 centrality_measures = {
     'degree': nx.degree_centrality(post_centric_graph),
     'betweenness': nx.betweenness_centrality(post_centric_graph),
     'closeness': nx.closeness_centrality(post_centric_graph)
 }
 
-# Convert to DataFrame for easier analysis
+# Convert to DataFrame for easier analysis and print the first 10 to check
 centrality_df = pd.DataFrame(centrality_measures)
 print(centrality_df.sort_values(by='degree', ascending=False).head(10))
 print(centrality_df.sort_values(by='betweenness', ascending=False).head(10))
@@ -100,11 +100,11 @@ print(f"Mean: {mean_degree}, Median: {median_degree}, Variance: {variance_degree
 
 import matplotlib.pyplot as plt
 
-# Load filtered data
-filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv")  # Adjust path if necessary
-filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv")  # Adjust path if necessary
+# Load filtered data, adjust path if necessary
+filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv")  
+filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv")  
 
-# Initialize the bipartite graph
+# Attempt to visualize the network as a bipartite graph to distinguish the post layer from commenter layer
 bi_graph_filtered_data = nx.Graph()
 
 # Build the bipartite graph

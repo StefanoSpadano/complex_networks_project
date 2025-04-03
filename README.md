@@ -14,7 +14,9 @@ This project lays a foundation for further targeted investigations into specific
 ---
 
 ## Table of contents
-- [Set up and installation](#setupandinstallation)
+- [Setup](#setup)
+
+- [Installation](#installation)
   
 - [Usage](#usage)
 
@@ -23,7 +25,16 @@ This project lays a foundation for further targeted investigations into specific
 ---
 
 ## Set up
-**Create an environment for the project**.
+This project was developed in an Anaconda environment, but a standard Python virtual environment (venv) will also work. 
+
+1. **Install git (if not installed)**:
+   
+   Git is needed to clone the repository. Install it from https://git-scm.com/downloads and check the installation with:
+```bash
+git --version
+```
+
+2. **Create an environment for the project**:
 
 For Anaconda users, open the Anaconda Prompt and type:
 ```bash
@@ -39,6 +50,9 @@ source my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\ac
 
 ## Installation
 1. **Clone the repository**:
+
+   Open Git Bash (Windows) or Terminal (Mac/Linux) and run:
+   
 ```bash
    git clone https://github.com/StefanoSpadano/complex_networks_project.git
    cd complex_networks_project

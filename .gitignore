@@ -18,3 +18,4 @@ venv/
 # Ignore IDE-specific files (e.g., PyCharm, VSCode)
 .idea/
 .vscode/
+

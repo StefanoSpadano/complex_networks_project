@@ -131,7 +131,7 @@ for _, post_data in filtered_posts.iterrows():
             )
             bi_graph_filtered_data.add_edge(post_id, commenter)
 
-# Use the existing node positions
+# Save the layout for future reuse
 pos = nx.spring_layout(bi_graph_filtered_data)
 
 # Plot refined bipartite graph layout
@@ -185,6 +185,8 @@ plt.title("Bipartite Graph with Sentiment Weights (Colored Edges)")
 plt.show()
 
 
+#Attempt at community detection algorithm
+
 from community import community_louvain
 
 # Apply the Louvain method for community detection
@@ -193,17 +195,17 @@ partition = community_louvain.best_partition(bi_graph_filtered_data, weight='wei
 # Extract degree centrality values
 degree_centrality = nx.degree_centrality(bi_graph_filtered_data)
 degree_values = list(degree_centrality.values())
-# Calculate threshold
+# The value for the threshold was chosen to exclude most of the nodes and include only those with higher degree
 threshold = np.percentile(degree_values, 90)
 
 # Filter nodes based on threshold
 central_nodes = [node for node, centrality in degree_centrality.items() if centrality >= threshold]
 
-# Create a color map for central nodes
+# Create a color map for central nodes to distinguish them from the other nodes
 central_node_colors = ["red" if node in central_nodes else "gray" for node in bi_graph_filtered_data.nodes()]
 central_node_sizes = [1000 if node in central_nodes else 10 for node in bi_graph_filtered_data.nodes()]
 
-# Generate graph layout
+# Use before defined graph layout
 pos = nx.spring_layout(bi_graph_filtered_data)
 
 # Plot the graph highlighting central nodes
@@ -220,7 +222,7 @@ nx.draw(
 plt.title("Graph Highlighting Central Nodes (90th Percentile Threshold)")
 plt.show()
 
-# Extract subgraph for central nodes
+# Extract subgraph for central nodes to show only those belonging to the central zone
 central_subgraph = bi_graph_filtered_data.subgraph(central_nodes)
 central_node_sizes_subgraph = [100 if node in central_nodes else 10 for node in central_subgraph.nodes()]
 subgraph_community_colors = [partition[node] for node in central_subgraph.nodes()]
@@ -316,6 +318,7 @@ filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.cs
 heatmap_data = filtered_comments.pivot_table(index='author', columns='post_id', aggfunc='size', fill_value=0)
 
 # Calculate post engagement and identify high engagement posts
+#Only those falling inside the top 10% were labeled as the high_engagement_posts
 post_engagement = heatmap_data.sum(axis=0)
 threshold = post_engagement.quantile(0.9)  # Top 10% threshold
 high_engagement_posts = post_engagement[post_engagement > threshold].index
@@ -338,49 +341,49 @@ missing_commenters = [commenter for commenter in top_commenters_clean if comment
 present_commenters = [commenter for commenter in top_commenters_clean if commenter in filtered_comments['author_clean'].values]
 
 # Build commenter network
-G = nx.Graph()
-G.add_nodes_from(present_commenters)
+commenter_network = nx.Graph()
+commenter_network.add_nodes_from(present_commenters)
 filtered_top_comments = filtered_comments[filtered_comments['author'].isin(present_commenters)]
 
 for post_id in filtered_top_comments['post_id'].unique():
     commenters = filtered_top_comments[filtered_top_comments['post_id'] == post_id]['author'].tolist()
     for i in range(len(commenters)):
         for j in range(i + 1, len(commenters)):
-            G.add_edge(commenters[i], commenters[j])
+            commenter_network.add_edge(commenters[i], commenters[j])
 
 # Visualize the full network
 plt.figure(figsize=(12, 12))
-pos = nx.spring_layout(G, k=0.15, iterations=20)
-nx.draw_networkx_nodes(G, pos, node_size=500, node_color='skyblue')
-nx.draw_networkx_edges(G, pos, width=2, alpha=0.5, edge_color='gray')
-nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold')
+pos = nx.spring_layout(commenter_network, k=0.15, iterations=20)
+nx.draw_networkx_nodes(commenter_network, pos, node_size=500, node_color='skyblue')
+nx.draw_networkx_edges(commenter_network, pos, width=2, alpha=0.5, edge_color='gray')
+nx.draw_networkx_labels(commenter_network, pos, font_size=12, font_weight='bold')
 plt.title("Commenter Network - Top Commenters")
 plt.show()
 
 # Analyze the largest connected component (mini-cluster)
-largest_cluster = max(nx.connected_components(G), key=len)
-mini_cluster_graph = G.subgraph(largest_cluster)
+largest_cluster = max(nx.connected_components(commenter_network), key=len)
+mini_cluster_graph = commenter_network.subgraph(largest_cluster)
 
 print(f"Number of nodes in the cluster: {mini_cluster_graph.number_of_nodes()}")
 print(f"Number of edges in the cluster: {mini_cluster_graph.number_of_edges()}")
 print(f"Cluster density: {nx.density(mini_cluster_graph)}")
 
-# Visualize the mini-cluster
+# Visualize the mini-cluster of commenters
 plt.figure(figsize=(8, 8))
 pos = nx.spring_layout(mini_cluster_graph, seed=42)
 nx.draw(mini_cluster_graph, pos, with_labels=True, node_color="skyblue", edge_color="gray", node_size=500, font_size=10)
 plt.title("Mini Cluster of Commenters")
 plt.show()
 
-# Centrality analysis
-centrality_df = pd.DataFrame({
+# Centrality analysis applied to the mini cluster of commenters just found; saving them in a dataframe
+centrality_df_mini_cluster = pd.DataFrame({
     'degree': nx.degree_centrality(mini_cluster_graph),
     'betweenness': nx.betweenness_centrality(mini_cluster_graph),
     'closeness': nx.closeness_centrality(mini_cluster_graph)
 }).sort_values(by='degree', ascending=False)
 
 print("Centrality measures for the mini-cluster:")
-print(centrality_df)
+print(centrality_df_mini_cluster)
 
 # Identify shared posts in the mini-cluster
 shared_posts = filtered_comments[filtered_comments['author'].isin(largest_cluster)].groupby('post_id')['author'].apply(list)
@@ -393,7 +396,7 @@ print(shared_posts)
 print("Titles of shared posts:")
 print(shared_post_titles)
 
-# Analyze sentiment distribution for mini-cluster commenters
+# Analyze sentiment distribution for mini-cluster commenters and visualize it as a pie chart
 mini_cluster_comments = filtered_comments[filtered_comments['author'].isin(present_commenters)]
 sentiment_counts = mini_cluster_comments['sentiment_category'].value_counts()
 
@@ -405,6 +408,8 @@ plt.ylabel('')
 plt.show()
 
 
+#Follows an attempt at simulating propagation of sentiments across the network of commenters
+#who commented on the same post
 
 from collections import Counter
 import random
@@ -414,7 +419,7 @@ import random
 random.seed(42)
 np.random.seed(42)
 
-# ===== Step 1: Build the Commenter-Commenter Network =====
+# Build the Commenter-Commenter Network 
 commenter_graph = nx.Graph()
 
 # Create edges between commenters who commented on the same post
@@ -427,7 +432,8 @@ for post_id, post_comments in filtered_comments.groupby('post_id'):
                 commenter_graph.add_edge(commenter1, commenter2, weight=0)
             commenter_graph[commenter1][commenter2]['weight'] += 1
 
-# ===== Step 2: Assign Initial Sentiments =====
+# Assign sentiments based on sentiment_body saved earlier
+
 def assign_initial_sentiment(row):
     if row > 0:
         return 1  # Positive
@@ -437,17 +443,21 @@ def assign_initial_sentiment(row):
         return 0  # Neutral
 
 # Aggregate sentiment_body by author and assign initial sentiments
+# here I used average sentiments for each comments authored by the same commenter
+
 initial_sentiments = filtered_comments.groupby('author')['sentiment_body'].mean().apply(assign_initial_sentiment)
 nx.set_node_attributes(commenter_graph, initial_sentiments.to_dict(), name='sentiment')
 
 # Print initial sentiment distribution
+
 initial_distribution = Counter(nx.get_node_attributes(commenter_graph, 'sentiment').values())
 print("Initial Sentiment Distribution:")
 print(f"Positive: {initial_distribution[1]}")
 print(f"Neutral: {initial_distribution[0]}")
 print(f"Negative: {initial_distribution[-1]}")
 
-# ===== Step 3: Simulate Sentiment Propagation =====
+# Simulate sentiment propagation 
+
 def propagate_sentiments(graph, max_steps=10, resistance_prob=0.05, flip_prob=0.1):
     sentiment_over_time = []
     current_sentiments = nx.get_node_attributes(graph, 'sentiment')
@@ -484,15 +494,18 @@ def propagate_sentiments(graph, max_steps=10, resistance_prob=0.05, flip_prob=0.
     return sentiment_over_time
 
 # Backup original sentiments
+
 original_sentiments = nx.get_node_attributes(commenter_graph, 'sentiment')
 
 # Run sentiment propagation
 sentiment_evolution = propagate_sentiments(commenter_graph, max_steps=50)
 
 # Restore original sentiments
+# was used during testing to check for possible different results obtained from the sentiment propagation
+
 nx.set_node_attributes(commenter_graph, original_sentiments, 'sentiment')
 
-# ===== Step 4: Visualize Sentiment Propagation =====
+# Visualize sentiment propagation 
 sentiment_labels = [-1, 0, 1]  # Negative, Neutral, Positive
 proportions = {label: [] for label in sentiment_labels}
 
@@ -501,7 +514,8 @@ for distribution in sentiment_evolution:
     for label in sentiment_labels:
         proportions[label].append(distribution.get(label, 0) / total)
 
-# Plot sentiment evolution
+# Plot sentiment evolution over a fixed number of times steps
+
 plt.figure(figsize=(10, 6))
 for label, values in proportions.items():
     plt.plot(values, label={-1: "Negative", 0: "Neutral", 1: "Positive"}[label])
@@ -512,7 +526,9 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# ===== Step 5: Check for Convergence =====
+# Check for Convergence 
+# during the sentiment propagation attempt all the parameters were chosen in heuristic way
+
 convergence_threshold = 0.001
 converged = True
 

@@ -457,6 +457,9 @@ print(f"Neutral: {initial_distribution[0]}")
 print(f"Negative: {initial_distribution[-1]}")
 
 # Simulate sentiment propagation 
+# resistance_prob emulates the stubborness in real_world networks
+# flip_prob allows for adapting to random sentiments mimicking unpredictable external factors
+# a weighted influence from neighbors is the main mechanism for sentiments updates
 
 def propagate_sentiments(graph, max_steps=10, resistance_prob=0.05, flip_prob=0.1):
     sentiment_over_time = []
@@ -552,7 +555,8 @@ print("The system has reached convergence." if converged else "The system has NO
 import copy
 
 
-# ===== Step 1: Shift Edge Weights for Community Detection =====
+# Shift Edge Weights for Community Detection as the Louvain algorithm needs positive edges only
+
 def shift_edge_weights(graph):
     """
     Shift edge weights to make them non-negative for community detection.
@@ -582,7 +586,8 @@ for community, size in community_sizes.items():
 # Assign communities as node attributes for further analysis
 nx.set_node_attributes(commenter_graph, partition, name='community')
 
-# ===== Step 2: Analyze Sentiment Distribution per Community =====
+# Analyze Sentiment Distribution per Community 
+
 def analyze_community_sentiments(graph, partition):
     """
     Analyze sentiment distribution for each community.
@@ -601,6 +606,7 @@ def analyze_community_sentiments(graph, partition):
     return community_sentiments
 
 # Populate and print sentiment distribution per community
+
 community_sentiments = analyze_community_sentiments(commenter_graph, partition)
 print("Sentiment Distribution per Community:")
 for community, sentiments in community_sentiments.items():
@@ -611,8 +617,9 @@ for community, sentiments in community_sentiments.items():
         label = {1: "Positive", 0: "Neutral", -1: "Negative"}[sentiment]
         print(f"  {label}: {count} ({proportion:.2%})")
 
-# ===== Step 3: Visualize Communities =====
-def visualize_communities(graph, partition, highlight_nodes=None, title="Commenter Network"):
+# Visualize Communities 
+
+def visualize_communities(graph, partition, highlight_nodes=None, title="Commenters Network"):
     """
     Visualize the graph with nodes colored by their communities.
     Optionally highlight specific nodes (e.g., top influencers).
@@ -654,7 +661,10 @@ def visualize_communities(graph, partition, highlight_nodes=None, title="Comment
 # Visualize the full graph with communities
 visualize_communities(commenter_graph, partition, title="Commenter Network Colored by Communities")
 
-# ===== Step 4: Analyze Top Influencers (Optimized) =====
+#  Analyze Top Influencers (Optimized) 
+# there were some issues calculating betweenness centrality for this amount of nodes
+# as the betweenness centrality takes O(N^3) to O(N^2) steps so for this graph was challenging
+
 def analyze_top_influencers(graph, top_n=500):
     """
     Analyze top influencers in the graph using centrality measures.
@@ -702,7 +712,8 @@ def analyze_top_influencers(graph, top_n=500):
 # Analyze top influencers
 influencers = analyze_top_influencers(commenter_graph, top_n=500)  # Limit to top 500 nodes
 
-# ===== Step 5: Calculate Sentiment Influence Scores =====
+# Calculate Sentiment Influence Scores 
+
 def calculate_sentiment_influence(subgraph):
     """
     Calculate sentiment influence scores for nodes in the subgraph.
@@ -721,16 +732,20 @@ def calculate_sentiment_influence(subgraph):
     return influence_scores
 
 # Get top sentiment influencers
+
 influence_scores = calculate_sentiment_influence(influencers["subgraph"])
 top_sentiment_influencers = sorted(influence_scores.items(), key=lambda x: x[1], reverse=True)[:5]
 print("Top Influencers by Sentiment Influence:", top_sentiment_influencers)
 
-# ===== Step 6: Visualize Subgraph with Top Nodes Highlighted =====
+# Visualize Subgraph with Top Nodes Highlighted 
+
 top_nodes = {node for node, _ in influencers["degree"] + influencers["betweenness"] + influencers["eigenvector"] + top_sentiment_influencers}
 visualize_communities(influencers["subgraph"], partition, highlight_nodes=top_nodes, title="Top Nodes Highlighted by Community")
 
 
-# ===== Step 1: Compute Modularity Score =====
+# Compute Modularity Score 
+# this quantity helps understanding is the communities just found are somewhat meaningful or not
+
 def compute_modularity(graph, partition):
     """
     Compute the modularity score for the given graph and partition.
@@ -749,7 +764,9 @@ def compute_modularity(graph, partition):
 # Compute modularity score
 modularity = compute_modularity(commenter_graph, partition)
 
-# ===== Step 2: Compute Sentiment Flow Matrix =====
+# Compute Sentiment Flow Matrix 
+# this is an attempt to check for propagation across the communities just found with the community detection algorithm
+
 def compute_sentiment_flow_matrix(graph, partition):
     """
     Compute the sentiment flow matrix between communities.
@@ -787,7 +804,7 @@ print(sentiment_flow_matrix)
 
 import seaborn as sns
 
-# ===== Step 3: Visualize Sentiment Flow Matrix =====
+# Visualize Sentiment Flow Matrix 
 def visualize_sentiment_flow(matrix):
     """
     Visualize the sentiment flow matrix as a heatmap.
@@ -805,7 +822,9 @@ def visualize_sentiment_flow(matrix):
 # Visualize the sentiment flow matrix
 visualize_sentiment_flow(sentiment_flow_matrix)
 
-# ===== Step 4: Compute Inter and Intra Flow Values =====
+# Compute Inter and Intra Flow Values 
+# these values are computed adding sentiment weights if there is an alignment between nodes sentiment
+
 def compute_flow_values(matrix):
     """
     Compute inter-community and intra-community flow values.

@@ -24,7 +24,7 @@ This project lays a foundation for further targeted investigations into specific
 
 ---
 
-## Set up
+## Setup
 This project was developed in an Anaconda environment, but a standard Python virtual environment (venv) will also work. 
 
 1. **Install git (if not installed)**:

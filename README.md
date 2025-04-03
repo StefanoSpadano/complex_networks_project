@@ -14,13 +14,28 @@ This project lays a foundation for further targeted investigations into specific
 ---
 
 ## Table of contents
-- [Installation](#installation)
+- [Set up and installation](#setupandinstallation)
   
 - [Usage](#usage)
 
 - [Examples](#examples)
 
 ---
+
+## Set up
+**Create an environment for the project**.
+
+For Anaconda users, open the Anaconda Prompt and type:
+```bash
+conda create --name my_project_env python=3.9
+conda activate my_project_env
+```
+
+For standard virtual environment users, open a Windows terminal and type:
+```bash
+python -m venv my_project_env
+source my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate
+```
 
 ## Installation
 1. **Clone the repository**:

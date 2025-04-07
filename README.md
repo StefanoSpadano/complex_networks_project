@@ -150,7 +150,7 @@ Metrics DataFrames saved.
 3. analize_sentiment.py
    
 ![Average sentiment by author](images/average_sentiment_per_author.png)
-5. 
-6. 
-7. 
-8. 
+5. network_aspects.py
+
+ 
+ 

@@ -97,7 +97,7 @@ Scripts can be run individually to perform different stages of the analysis.
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;
-- network_aspects.py: takes care of visualization of the twod different types of network and their features.
+- network_aspects.py: takes care of visualization of the two different types of network and their features.
 
 **For Anaconda and Spyder users** you can simply open each script in Spyder and run it pressing F5, just make sure to activate the correct environment before.
 

@@ -110,3 +110,47 @@ python analize_sentiment.py
 python analize_comment_sentiment.py
 python network_aspects.py
 ```
+
+## Examples
+1. data_collection.py
+```bash
+python data_collection.py
+
+It appears that you are using PRAW in an asynchronous environment.
+It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
+See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+
+Saving collected data...
+Data collection complete. Posts and comments have been saved.
+```
+
+2. analize_metrics.py
+```bash
+python analize_metrics.py
+
+Post Metrics:
+   post_id             author  ...  total_posts  unique_commenters
+0   pof2r4   Any_Plantain_872  ...            1                485
+1   pz6fk7          Leonboi64  ...            1                704
+2   tokct1       blading_wind  ...            1                752
+3   qs42bo  consciousredditor  ...            1                254
+4  1inrb3e      Stonefree2011  ...            1                185
+
+[5 rows x 11 columns]
+
+Comment Metrics:
+               author  total_comments
+0          --Azazel--               4
+1  --Imhighrightnow--               1
+2             -ALLDAY               1
+3          -BigHarry-              26
+4     -Buggy-D-Clown-               1
+Metrics DataFrames saved.
+```
+3. analize_sentiment.py
+   
+![Average sentiment by author](images/average_sentiment_per_author.png)
+5. 
+6. 
+7. 
+8. 

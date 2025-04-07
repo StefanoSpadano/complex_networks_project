@@ -89,3 +89,24 @@ REDDIT_CLIENT_ID = "your-client-id"
 REDDIT_CLIENT_SECRET = "your-client-secret"
 
 REDDIT_USER_AGENT = "your-user-agent"
+
+## Usage 
+Scripts can be run individually to perform different stages of the analysis.
+
+- data_collection.py: collects posts and comments from the subreddit saving them in a folder called data;
+- analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
+- analize_sentiment.py: investigates sentiment distribution across posts;
+- analize_comment_sentiment.py: investigates comment's sentiment for each post;
+- network_aspects.py: takes care of visualization of the twod different types of network and their features.
+
+**For Anaconda and Spyder users** you can simply open each script in Spyder and run it pressing F5, just make sure to activate the correct environment before.
+
+**For standard Python users** you can run the scripts from your terminal or command prompt, just make sure to be in the root folder of the cloned repository before running the following commands:
+
+```bash
+python data_collection.py
+python analize_metrics.py
+python analize_sentiment.py
+python analize_comment_sentiment.py
+python network_aspects.py
+```

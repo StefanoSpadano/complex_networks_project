@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov  7 11:32:48 2024
-
-@author: Raffaele
-"""
 
 # -*- coding: utf-8 -*-
 """
@@ -17,6 +11,9 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import pearsonr, spearmanr
+
+from utils import save_plot
+
 
 
 def load_data(posts_path, post_metrics_path):
@@ -95,6 +92,7 @@ def plot_sentiment_distribution(sentiment_posts_cleaned):
     plt.xlabel('Sentiment Score (-1 to 1)')
     plt.ylabel('Frequency')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot("Distribution of sentiment scores", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -130,6 +128,7 @@ def add_sentiment_category(sentiment_posts_cleaned):
     return sentiment_posts_cleaned
 
 
+
 def plot_sentiment_categories(sentiment_posts_cleaned):
     """
     Plot the distribution of sentiment categories.
@@ -143,6 +142,7 @@ def plot_sentiment_categories(sentiment_posts_cleaned):
     plt.xlabel('Sentiment Category')
     plt.ylabel('Count')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot("Distribution of sentiment categories", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -161,6 +161,7 @@ def plot_flair_sentiment(sentiment_posts_cleaned):
     plt.ylabel('Average Sentiment Score')
     plt.xticks(rotation=45)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_plot("Average sentiment score by flair", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -180,6 +181,7 @@ def plot_top_posts(sentiment_posts_cleaned):
     plt.title('Most Positive and Negative Posts')
     plt.xlabel('Sentiment Score')
     plt.ylabel('Post ID')
+    save_plot("Most positive and negative posts", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -197,6 +199,7 @@ def plot_author_sentiment(sentiment_posts_cleaned):
     plt.xlabel('Author')
     plt.ylabel('Average Sentiment Score')
     plt.xticks(rotation=90)
+    save_plot("Average sentiment per author", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -215,6 +218,7 @@ def plot_top_authors(sentiment_posts_cleaned):
     plt.title('Top 10 Authors by Average Sentiment')
     plt.xlabel('Average Sentiment Score')
     plt.ylabel('Author')
+    save_plot("Top 10 authors by average sentiment", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -231,6 +235,7 @@ def plot_sentiment_vs_engagement(sentiment_posts_cleaned):
     plt.xlabel('Score')
     plt.ylabel('Sentiment Score')
     plt.legend(title='Flair')
+    save_plot("score vs sentiment", "plots/analize_sentiment_plots")
     plt.show()
 
 
@@ -263,6 +268,9 @@ def main():
     posts_path = "../data/onepiece_posts.csv"
     post_metrics_path = "../data/post_metrics.csv"
     output_path = "../data/onepiece_sentiment_posts_filtered.csv"
+    
+    plt.ioff()  # Turn interactive mode off
+
 
     # Load data
     posts_df, post_metrics = load_data(posts_path, post_metrics_path)
@@ -302,7 +310,7 @@ def main():
 
     # Plot sentiment vs engagement
     plot_sentiment_vs_engagement(sentiment_posts_cleaned)
-
+    
     # Calculate correlations
     calculate_correlations(sentiment_posts_cleaned)
 

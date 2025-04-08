@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  8 15:45:01 2024
-
-@author: Raffaele
-"""
-
 
 # -*- coding: utf-8 -*-
 """
@@ -20,6 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import powerlaw
 from scipy.stats import pearsonr, spearmanr
+
+from utils import save_plot
+
 
 
 def load_comments_data(comments_path):
@@ -100,6 +96,7 @@ def plot_sentiment_distribution(filtered_comments):
     plt.title('Kernel Density Estimate of Sentiment Scores')
     plt.xlabel('Sentiment Score')
     plt.ylabel('Density')
+    save_plot("Kernel Density Estimate of Sentiment Scores","plots/analize_comment_sentiment_plots")
     plt.show()
 
 
@@ -158,6 +155,7 @@ def plot_engagement_by_sentiment(filtered_comments):
     plt.title('Average Engagement by Sentiment Category')
     plt.xlabel('Sentiment Category')
     plt.ylabel('Average Engagement (Score)')
+    save_plot("Average Engagement by Sentiment Category","plots/analize_comment_sentiment_plots")
     plt.show()
 
 
@@ -176,6 +174,7 @@ def plot_comment_scores(filtered_comments):
     plt.title('Regular Histogram of Comment Scores')
     plt.xlabel('Score')
     plt.ylabel('Frequency')
+    save_plot("Regular Histogram of Comment Scores","plots/analize_comment_sentiment_plots")
     plt.show()
 
     # Log-log histogram
@@ -186,6 +185,7 @@ def plot_comment_scores(filtered_comments):
     plt.title('Log-Log Histogram of Comment Scores')
     plt.xlabel('Score (Log Scale)')
     plt.ylabel('Frequency (Log Scale)')
+    save_plot("Log-Log Histogram of Comment Scores","plots/analize_comment_sentiment_plots")
     plt.show()
 
 
@@ -207,6 +207,7 @@ def fit_power_law(filtered_comments):
     plt.xlabel('Score')
     plt.ylabel('CCDF')
     plt.legend()
+    save_plot("CCDF of Comment Scores","plots/analize_comment_sentiment_plots")
     plt.show()
 
 
@@ -243,6 +244,7 @@ def compare_distributions(filtered_comments):
     plt.ylabel('Density (log scale)')
     plt.title('Comparison of Lognormal and Power-law Fits')
     plt.legend()
+    save_plot("Comparison of Lognormal and Power-law Fits","plots/analize_comment_sentiment_plots")
     plt.show()
 
     print("Lognormal mu (mean):", lognorm_fit.lognormal.mu)
@@ -278,6 +280,7 @@ def analyze_top_comments(filtered_comments, N=100):
     plt.xlabel('Sentiment (Compound Score)')
     plt.ylabel('Engagement Score')
     plt.grid()
+    save_plot("Engagement vs. Sentiment for Top Comments","plots/analize_comment_sentiment_plots")
     plt.show()
 
     # Plot length vs. sentiment
@@ -287,6 +290,7 @@ def analyze_top_comments(filtered_comments, N=100):
     plt.xlabel('Length of Comment')
     plt.ylabel('Sentiment (Compound Score)')
     plt.grid()
+    save_plot("Length vs. Sentiment for Top Comments","plots/analize_comment_sentiment_plots")
     plt.show()
 
     # Calculate Pearson correlation
@@ -309,6 +313,7 @@ def analyze_top_comments(filtered_comments, N=100):
     plt.xlabel('Length of Comment')
     plt.ylabel('Sentiment (Compound Score)')
     plt.grid()
+    save_plot("KDE Heatmap: Length vs. Sentiment","plots/analize_comment_sentiment_plots")
     plt.show()
 
 

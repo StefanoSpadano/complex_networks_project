@@ -42,10 +42,10 @@ conda create --name my_project_env python=3.9
 conda activate my_project_env
 ```
 
-For standard virtual environment users, open a Windows terminal and type:
+For standard virtual environment users, open the command prompt terminal and type:
 ```bash
 python -m venv my_project_env
-source my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate
+my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
 ```
 
 ## Installation
@@ -69,7 +69,7 @@ pip install -r requirements.txt
 
 - fill in:
 
-  - app name (for example OnePiece scraper);
+  - app name (for example OnePieceScraper);
   
   - set Redirect URI to "http://localhost:8080";
   
@@ -88,7 +88,7 @@ REDDIT_CLIENT_ID = "your-client-id"
 
 REDDIT_CLIENT_SECRET = "your-client-secret"
 
-REDDIT_USER_AGENT = "your-user-agent"
+REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by "by /u/yourusername"**
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis.
@@ -98,6 +98,8 @@ Scripts can be run individually to perform different stages of the analysis.
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;
 - network_aspects.py: takes care of visualization of the two different types of network and their features.
+
+The last three scripts produce some plots which will be saved in a dedicated folder for plots and each plot is saved with its name and a time stamp.
 
 **For Anaconda and Spyder users** you can simply open each script in Spyder and run it pressing F5, just make sure to activate the correct environment before.
 

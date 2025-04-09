@@ -9,6 +9,9 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 
+from utils import save_plot
+
+
 # Load data with error handling
 def load_csv(filepath):
     """Load a CSV file into a pandas DataFrame with error handling."""
@@ -141,6 +144,7 @@ nx.draw_networkx_nodes(bi_graph_filtered_data, pos, nodelist=[n for n, d in bi_g
 nx.draw_networkx_edges(bi_graph_filtered_data, pos, alpha=0.5)
 plt.legend()
 plt.title("Refined Bipartite Graph Layout")
+save_plot("Refined Bipartite Graph Layout","plots/network_aspects_plots")
 plt.show()
 
 # Plot bipartite graph with sentiment-based edge coloring
@@ -182,6 +186,7 @@ for (u, v), color, opacity in zip(bi_graph_filtered_data.edges(), edge_colors, e
 
 plt.legend()
 plt.title("Bipartite Graph with Sentiment Weights (Colored Edges)")
+save_plot("Bipartite Graph with Sentiment Weights (Colored Edges)","plots/network_aspects_plots")
 plt.show()
 
 
@@ -220,6 +225,7 @@ nx.draw(
     with_labels=False
 )
 plt.title("Graph Highlighting Central Nodes (90th Percentile Threshold)")
+save_plot("Graph Highlighting Central Nodes (90th Percentile Threshold)","plots/network_aspects_plots")
 plt.show()
 
 # Extract subgraph for central nodes to show only those belonging to the central zone
@@ -228,7 +234,9 @@ central_node_sizes_subgraph = [100 if node in central_nodes else 10 for node in 
 subgraph_community_colors = [partition[node] for node in central_subgraph.nodes()]
 
 # Plot the subgraph with community detection applied
-plt.figure(figsize=(12, 12))
+# Plot the subgraph with community detection applied
+fig, ax = plt.subplots(figsize=(12, 12))
+
 nx.draw(
     central_subgraph,
     pos,
@@ -236,10 +244,18 @@ nx.draw(
     node_size=central_node_sizes_subgraph,
     alpha=0.7,
     with_labels=False,
-    edge_color='gray'
+    edge_color='gray',
+    ax=ax  # explicitly link to axes
 )
-plt.title("Zoomed-In View: Central Nodes and Their Communities")
+
+ax.set_title("Zoomed-In View: Central Nodes and Their Communities")
+
+# Save using your helper
+save_plot("Zoomed-In View - Central Nodes and Their Communities", "plots/network_aspects_plots")
+
 plt.show()
+
+
 
 # Compute betweenness and closeness centrality for central nodes
 betweenness_centrality = nx.betweenness_centrality(bi_graph_filtered_data)
@@ -266,6 +282,7 @@ plt.xlabel('Closeness Centrality')
 plt.ylabel('Frequency')
 
 plt.tight_layout()
+save_plot("Closeness Centrality of Central Nodes","plots/network_aspects_plots")
 plt.show()
 
 
@@ -307,6 +324,7 @@ plt.xlabel('Number of Comments')
 plt.ylabel('Frequency')
 
 plt.tight_layout()
+save_plot("Distribution of Comments by High Centrality Commenters","plots/network_aspects_plots")
 plt.show()
 
 
@@ -358,6 +376,7 @@ nx.draw_networkx_nodes(commenter_network, pos, node_size=500, node_color='skyblu
 nx.draw_networkx_edges(commenter_network, pos, width=2, alpha=0.5, edge_color='gray')
 nx.draw_networkx_labels(commenter_network, pos, font_size=12, font_weight='bold')
 plt.title("Commenter Network - Top Commenters")
+save_plot("Commenter Network - Top Commenters","plots/network_aspects_plots")
 plt.show()
 
 # Analyze the largest connected component (mini-cluster)
@@ -373,6 +392,7 @@ plt.figure(figsize=(8, 8))
 pos = nx.spring_layout(mini_cluster_graph, seed=42)
 nx.draw(mini_cluster_graph, pos, with_labels=True, node_color="skyblue", edge_color="gray", node_size=500, font_size=10)
 plt.title("Mini Cluster of Commenters")
+save_plot("Mini Cluster of Commenters","plots/network_aspects_plots")
 plt.show()
 
 # Centrality analysis applied to the mini cluster of commenters just found; saving them in a dataframe
@@ -405,6 +425,7 @@ colors = ['#ff9999', '#66b3ff', '#99ff99']
 sentiment_counts.plot.pie(autopct='%1.1f%%', startangle=90, colors=colors, labels=sentiment_counts.index)
 plt.title("Sentiment Distribution for Mini-Cluster Commenters")
 plt.ylabel('')
+save_plot("Sentiment Distribution for Mini-Cluster Commenters","plots/network_aspects_plots")
 plt.show()
 
 
@@ -527,6 +548,7 @@ plt.ylabel("Proportion of Sentiments")
 plt.title("Sentiment Propagation Over Time")
 plt.legend()
 plt.grid(True)
+save_plot("Sentiment Propagation Over Time","plots/network_aspects_plots")
 plt.show()
 
 # Check for Convergence 
@@ -656,6 +678,7 @@ def visualize_communities(graph, partition, highlight_nodes=None, title="Comment
     )
 
     plt.title(title, fontsize=16)
+    save_plot(title,"plots/network_aspects_plots")
     plt.show()
 
 # Visualize the full graph with communities
@@ -817,6 +840,7 @@ def visualize_sentiment_flow(matrix):
     plt.title("Sentiment Flow Matrix Heatmap")
     plt.xlabel("Community")
     plt.ylabel("Community")
+    save_plot("Sentiment Flow Matrix Heatmap","plots/network_aspects_plots")
     plt.show()
 
 # Visualize the sentiment flow matrix

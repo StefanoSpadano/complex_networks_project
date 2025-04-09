@@ -300,21 +300,45 @@ def analyze_top_comments(filtered_comments, N=100):
     # Calculate Spearman correlation
     spearman_corr, p_value = spearmanr(top_summary['length'], top_summary['sentiment_body'])
     print(f"Spearman Correlation: {spearman_corr:.4f}, P-value: {p_value:.4e}")
-
-    # KDE heatmap
-    plt.figure(figsize=(10, 6))
+    
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
     sns.kdeplot(
         x=top_summary['length'],
         y=top_summary['sentiment_body'],
         cmap='Blues',
-        fill=True
+        fill=True,
+        ax=ax
     )
-    plt.title('KDE Heatmap: Length vs. Sentiment')
-    plt.xlabel('Length of Comment')
-    plt.ylabel('Sentiment (Compound Score)')
-    plt.grid()
-    save_plot("KDE Heatmap: Length vs. Sentiment","plots/analize_comment_sentiment_plots")
-    plt.show()
+    ax.set_title('KDE Heatmap: Length vs. Sentiment')
+    ax.set_xlabel('Length of Comment')
+    ax.set_ylabel('Sentiment (Compound Score)')
+    ax.grid(True)
+
+    fig.tight_layout()
+    fig.savefig("plots/analize_comment_sentiment_plots/KDE Heatmap - Length vs Sentiment.png")
+    plt.close(fig)
+
+
+# =============================================================================
+#     # KDE heatmap
+#     plt.figure(figsize=(10, 6))
+#     sns.kdeplot(
+#         x=top_summary['length'],
+#         y=top_summary['sentiment_body'],
+#         cmap='Blues',
+#         fill=True
+#     )
+#     plt.title('KDE Heatmap: Length vs. Sentiment')
+#     plt.xlabel('Length of Comment')
+#     plt.ylabel('Sentiment (Compound Score)')
+#     plt.grid()
+#     #plt.tight_layout()  # <-- Important in order to save correctly the plot in the folder as with sns works differently
+#     save_plot("KDE Heatmap: Length vs. Sentiment","plots/analize_comment_sentiment_plots")
+#     plt.savefig("debug_kde.png")
+#     plt.show()
+# 
+# =============================================================================
 
 
 def save_filtered_comments(filtered_comments, output_path):

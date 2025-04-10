@@ -14,9 +14,9 @@ This project lays a foundation for further targeted investigations into specific
 ---
 
 ## Table of contents
-- [Setup](#setup)
-
 - [Installation](#installation)
+
+- [Setup](#setup)
   
 - [Usage](#usage)
 
@@ -24,8 +24,8 @@ This project lays a foundation for further targeted investigations into specific
 
 ---
 
-## Setup
-This project was developed in an Anaconda environment, but a standard Python virtual environment (venv) will also work. 
+## Installation
+This project was developed in Python (version 3.9 or higher needed) using an Anaconda environment, but a standard Python virtual environment (venv) will also work. 
 
 1. **Install git (if not installed)**:
    
@@ -34,22 +34,7 @@ This project was developed in an Anaconda environment, but a standard Python vir
 git --version
 ```
 
-2. **Create an environment for the project**:
-
-For Anaconda users, open the Anaconda Prompt and type:
-```bash
-conda create --name my_project_env python=3.9
-conda activate my_project_env
-```
-
-For standard virtual environment users, open the command prompt terminal and type:
-```bash
-python -m venv my_project_env
-my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
-```
-
-## Installation
-1. **Clone the repository**:
+2. **Clone the repository**:
 
    Open Git Bash (Windows) or Terminal (Mac/Linux) and run:
    
@@ -61,7 +46,24 @@ my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.
 ```bash
 pip install -r requirements.txt
 ```
-3. Once you have created a Reddit account you can go to https://www.reddit.com/prefs/apps and click on:
+
+3. **Create an environment for the project**:
+
+For Anaconda users, open the Anaconda Prompt and type:
+```bash
+conda create --name my_project_env python=3.9
+conda activate my_project_env
+```
+
+For standard virtual environment users, open the command prompt terminal, move into the downloaded folder and type:
+```bash
+python -m venv my_project_env
+my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
+```
+
+## Setup
+
+Once you have created a Reddit account you can go to https://www.reddit.com/prefs/apps and click on:
 
 - "Create an app" or "Create another app";
 
@@ -82,13 +84,13 @@ After submitting these spaces you will get access to:
 - Client secret (a long alphanumeric string).
 
 
-4. A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved into it in the following way:
+A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved into it in the following way:
 ## config.py
 REDDIT_CLIENT_ID = "your-client-id"
 
 REDDIT_CLIENT_SECRET = "your-client-secret"
 
-REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by "by /u/yourusername"**
+REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis.
@@ -153,6 +155,10 @@ Metrics DataFrames saved.
    
 ![Average sentiment by author](images/average_sentiment_per_author.png)
 5. network_aspects.py
+
+![Bipartite graph with sentiment weights](images/Bipartite_Graph_with_Sentiment_Weights.png)
+
+
 
  
  

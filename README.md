@@ -1,5 +1,7 @@
 # One Piece subreddit network analysis
 
+![Buggy](images/buggy.jpg)
+
 ## Description
 This project aims at studying the network dynamics of a subreddit online. The subreddit chosen is the OnePiece subreddit and in order to study user engagement, user sentiments and network dynamics some python libraries have been used such as PRAW, Pandas, VADER Sentiment Analysis and Networkx. 
 
@@ -49,7 +51,7 @@ pip install -r requirements.txt
 
 3. **Create an environment for the project**:
 
-For Anaconda users, open the Anaconda Prompt and type:
+For Anaconda users, open the Anaconda Prompt move into the cloned folder and type:
 ```bash
 conda create --name my_project_env python=3.9
 conda activate my_project_env

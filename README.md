@@ -1,5 +1,7 @@
 # One Piece subreddit network analysis
 
+A network and sentiment analysis project based on user interactions in the r/OnePiece subreddit.
+
 ![Buggy](images/buggy.jpg)
 
 ## Description
@@ -9,9 +11,9 @@ This project explores the dynamics of social interactions and sentiment propagat
 
 Key analysis investigated were community detection, centrality measures and sentiment propagation modelling; distinct clusters were identified and some of them show a notable inter-community sentiment flow visualized through a heatmap. 
 
-This small study was an excercise to demonstrate the applicability of network analysis to real-world social data coming from online interactions and aiming at understanding these better. 
+This small study demonstrates how network analysis can help understand real-world social data derived from online interactions.
 
-This project lays a foundation for further targeted investigations into specific aspects, such as temporal dynamics of sentiment during key One Piece events. It still comes with some limitations such as a limited size for the number of posts obtained, limited perspectives that may be due to the analysis of only one subreddit about this topic, the parameters for the sentiment propagation model were chosen in heuristic way and the sentiment analysis tool is lexycon based. 
+This project lays a foundation for further targeted investigations into specific aspects, such as temporal dynamics of sentiment during key One Piece events. It still comes with some limitations such as a limited size for the number of posts obtained, limited perspectives that may be due to the analysis of only one subreddit about this topic, the parameters for the sentiment propagation model were chosen in heuristic way and the sentiment analysis tool is lexicon based. 
 
 ---
 
@@ -44,12 +46,7 @@ git --version
    git clone https://github.com/StefanoSpadano/complex_networks_project.git
    cd complex_networks_project
 ```
-2. **Install dependencies used in this project**
-```bash
-pip install -r requirements.txt
-```
-
-3. **Create an environment for the project**:
+2. **Create an environment for the project**:
 
 For Anaconda users, open the Anaconda Prompt move into the cloned folder and type:
 ```bash
@@ -62,6 +59,18 @@ For standard virtual environment users, open the command prompt terminal, move i
 python -m venv my_project_env
 my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
 ```
+
+3. **Install dependencies used in this project**
+If using conda, you can install the dependencies with:
+```bash
+conda install --file requirements.txt
+```
+Otherwise:
+```bash
+pip install -r requirements.txt
+```
+
+
 
 ## Setup
 

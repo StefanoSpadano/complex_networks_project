@@ -74,6 +74,8 @@ pip install -r requirements.txt
 
 ## Setup
 
+A [Reddit](https://www.reddit.com/) account is needed for the collection of data from the subreddit chosen. 
+
 Once you have created a Reddit account you can go to https://www.reddit.com/prefs/apps and click on:
 
 - "Create an app" or "Create another app";
@@ -104,7 +106,7 @@ REDDIT_CLIENT_SECRET = "your-client-secret"
 REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
 
 ## Usage 
-Scripts can be run individually to perform different stages of the analysis.
+Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.
 
 - data_collection.py: collects posts and comments from the subreddit saving them in a folder called data;
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;

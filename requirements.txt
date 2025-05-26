@@ -9,3 +9,4 @@ scipy==1.15.2
 seaborn==0.13.2
 vaderSentiment==3.3.2
 vaderSentiment==3.3.2
+pytest>=7.0

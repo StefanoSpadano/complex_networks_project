@@ -41,3 +41,13 @@ def save_plot(name_hint: str = "", folder: str = ""):
     # Save
     plt.savefig(full_path, bbox_inches="tight")
     print(f"✅ Plot saved as {full_path}")
+    
+
+def categorize_sentiment(score):
+    if score < -0.1:
+        return 'Negative'
+    elif score > 0.1:
+        return 'Positive'
+    else:
+        return 'Neutral'
+

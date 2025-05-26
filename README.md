@@ -46,7 +46,7 @@ git --version
    git clone https://github.com/StefanoSpadano/complex_networks_project.git
    cd complex_networks_project
 ```
-2. **Create an environment for the project**:
+3. **Create an environment for the project**:
 
 For Anaconda users, open the Anaconda Prompt move into the cloned folder and type:
 ```bash
@@ -60,7 +60,7 @@ python -m venv my_project_env
 my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
 ```
 
-3. **Install dependencies used in this project**
+4. **Install dependencies used in this project**
 If using conda, you can install the dependencies with:
 ```bash
 conda install --file requirements.txt

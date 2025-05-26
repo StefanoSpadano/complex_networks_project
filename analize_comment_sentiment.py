@@ -14,7 +14,7 @@ import numpy as np
 import powerlaw
 from scipy.stats import pearsonr, spearmanr
 
-from utils import save_plot
+from utils import save_plot, categorize_sentiment
 
 
 
@@ -100,22 +100,24 @@ def plot_sentiment_distribution(filtered_comments):
     plt.show()
 
 
-def categorize_sentiment(sentiment_score):
-    """
-    Categorize a sentiment score into 'Positive', 'Neutral', or 'Negative'.
-
-    Args:
-        sentiment_score (float): The sentiment score.
-
-    Returns:
-        str: The sentiment category.
-    """
-    if sentiment_score > 0:
-        return 'Positive'
-    elif sentiment_score < 0:
-        return 'Negative'
-    else:
-        return 'Neutral'
+# =============================================================================
+# def categorize_sentiment(sentiment_score):
+#     """
+#     Categorize a sentiment score into 'Positive', 'Neutral', or 'Negative'.
+# 
+#     Args:
+#         sentiment_score (float): The sentiment score.
+# 
+#     Returns:
+#         str: The sentiment category.
+#     """
+#     if sentiment_score > 0:
+#         return 'Positive'
+#     elif sentiment_score < 0:
+#         return 'Negative'
+#     else:
+#         return 'Neutral'
+# =============================================================================
 
 
 def add_sentiment_category(filtered_comments):

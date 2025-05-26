@@ -9,7 +9,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 
-from utils import save_plot
+from utils import save_plot, compute_flow_values
 
 
 # Load data with error handling
@@ -849,37 +849,39 @@ visualize_sentiment_flow(sentiment_flow_matrix)
 # Compute Inter and Intra Flow Values 
 # these values are computed adding sentiment weights if there is an alignment between nodes sentiment
 
-def compute_flow_values(matrix):
-    """
-    Compute inter-community and intra-community flow values.
-    
-    Args:
-        matrix (np.ndarray): The sentiment flow matrix.
-    
-    Returns:
-        tuple: A tuple containing two lists:
-            - inter_flows: List of (i, j, flow) for inter-community flows.
-            - intra_flows: List of (i, flow) for intra-community flows.
-    """
-    num_communities = matrix.shape[0]
-    inter_flows = []
-    intra_flows = []
-
-    for i in range(num_communities):
-        for j in range(num_communities):
-            if i == j:
-                # Intra-community flow
-                intra_flows.append((i, matrix[i, j]))
-            else:
-                # Inter-community flow
-                if matrix[i, j] > 0:
-                    inter_flows.append((i, j, matrix[i, j]))
-
-    # Sort flows by value in descending order
-    inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
-    intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
-
-    return inter_flows, intra_flows
+# =============================================================================
+# def compute_flow_values(matrix):
+#     """
+#     Compute inter-community and intra-community flow values.
+#     
+#     Args:
+#         matrix (np.ndarray): The sentiment flow matrix.
+#     
+#     Returns:
+#         tuple: A tuple containing two lists:
+#             - inter_flows: List of (i, j, flow) for inter-community flows.
+#             - intra_flows: List of (i, flow) for intra-community flows.
+#     """
+#     num_communities = matrix.shape[0]
+#     inter_flows = []
+#     intra_flows = []
+# 
+#     for i in range(num_communities):
+#         for j in range(num_communities):
+#             if i == j:
+#                 # Intra-community flow
+#                 intra_flows.append((i, matrix[i, j]))
+#             else:
+#                 # Inter-community flow
+#                 if matrix[i, j] > 0:
+#                     inter_flows.append((i, j, matrix[i, j]))
+# 
+#     # Sort flows by value in descending order
+#     inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
+#     intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
+# 
+#     return inter_flows, intra_flows
+# =============================================================================
 
 # Compute inter and intra flow values
 inter_flows, intra_flows = compute_flow_values(sentiment_flow_matrix)

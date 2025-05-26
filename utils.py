@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 import matplotlib.pyplot as plt
 import inspect
+import numpy as np
+
 
 def save_plot(name_hint: str = "", folder: str = ""):
     """
@@ -51,3 +53,60 @@ def categorize_sentiment(score):
     else:
         return 'Neutral'
 
+
+def compute_flow_values(matrix):
+     """
+     Compute inter-community and intra-community flow values.
+     
+     Args:
+         matrix (np.ndarray): The sentiment flow matrix.
+     
+     Returns:
+         tuple: A tuple containing two lists:
+             - inter_flows: List of (i, j, flow) for inter-community flows.
+             - intra_flows: List of (i, flow) for intra-community flows.
+     """
+     num_communities = matrix.shape[0]
+     inter_flows = []
+     intra_flows = []
+ 
+     for i in range(num_communities):
+         for j in range(num_communities):
+             if i == j:
+                 # Intra-community flow
+                 intra_flows.append((i, matrix[i, j]))
+             else:
+                 # Inter-community flow
+                 if matrix[i, j] > 0:
+                     inter_flows.append((i, j, matrix[i, j]))
+ 
+     # Sort flows by value in descending order
+     inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
+     intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
+ 
+     return inter_flows, intra_flows
+
+
+# =============================================================================
+# def compute_flow_values(matrix):
+#     """
+#     Compute inter-community and intra-community flow values.
+#     """
+#     num_communities = matrix.shape[0]
+#     inter_flows = []
+#     intra_flows = []
+# 
+#     for i in range(num_communities):
+#         for j in range(num_communities):
+#             if i == j:
+#                 intra_flows.append((i, matrix[i, j]))
+#             else:
+#                 if matrix[i, j] > 0:
+#                     inter_flows.append((i, j, matrix[i, j]))
+# 
+#     inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
+#     intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
+# 
+#     return inter_flows, intra_flows
+# 
+# =============================================================================

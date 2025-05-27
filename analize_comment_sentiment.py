@@ -18,19 +18,27 @@ from utils import save_plot, categorize_sentiment
 
 
 
-def load_comments_data(comments_path):
-    """
-    Load comments data from a CSV file.
+def load_data(path):
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.read_csv(path, lineterminator='\n', engine='python')
 
-    Args:
-        comments_path (str): Path to the comments CSV file.
-
-    Returns:
-        pd.DataFrame: DataFrame containing comments data.
-    """
-    comments_df = pd.read_csv(comments_path)
-    return comments_df
-
+# =============================================================================
+# def load_comments_data(comments_path):
+#     """
+#     Load comments data from a CSV file.
+# 
+#     Args:
+#         comments_path (str): Path to the comments CSV file.
+# 
+#     Returns:
+#         pd.DataFrame: DataFrame containing comments data.
+#     """
+#     comments_df = pd.read_csv(comments_path)
+#     return comments_df
+# 
+# =============================================================================
 
 def filter_comments(comments_df):
     """
@@ -360,7 +368,7 @@ def main():
     output_path = "../data/onepiece_sentiment_comments_filtered.csv"
 
     # Load comments data
-    comments_df = load_comments_data(comments_path)
+    comments_df = load_data(comments_path)
 
     # Filter comments
     filtered_comments = filter_comments(comments_df)

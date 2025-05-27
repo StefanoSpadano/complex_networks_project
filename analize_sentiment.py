@@ -12,15 +12,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import pearsonr, spearmanr
 
-from utils import save_plot, categorize_sentiment
+from utils import save_plot, categorize_sentiment, load_data
 
 
 
-def load_data(path):
-    try:
-        return pd.read_csv(path)
-    except Exception:
-        return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
+# def load_data(path):
+#     try:
+#         return pd.read_csv(path)
+#     except Exception:
+#         return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
 
 # =============================================================================
 # def load_data(posts_path, post_metrics_path):

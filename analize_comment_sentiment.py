@@ -14,15 +14,17 @@ import numpy as np
 import powerlaw
 from scipy.stats import pearsonr, spearmanr
 
-from utils import save_plot, categorize_sentiment
+from utils import save_plot, categorize_sentiment, load_data
 
 
 
-def load_data(path):
-    try:
-        return pd.read_csv(path)
-    except Exception:
-        return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
+# def load_data(path):
+#     try:
+#         return pd.read_csv(path)
+#     except Exception:
+#         return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
 
 # =============================================================================
 # def load_comments_data(comments_path):

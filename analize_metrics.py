@@ -6,13 +6,16 @@ Created on Wed Nov  6 18:24:17 2024
 """
 
 import pandas as pd
+from utils import load_data
 
 
-def load_data(path):
-    try:
-        return pd.read_csv(path)
-    except Exception:
-        return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
+# def load_data(path):
+#     try:
+#         return pd.read_csv(path)
+#     except Exception:
+#         return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
 
 # =============================================================================
 # def load_data(posts_path, comments_path):
@@ -159,7 +162,7 @@ def main():
     comment_metrics_path = "../data/comment_metrics.csv"
 
     # Load data
-    posts_df,  = load_data(posts_path)
+    posts_df  = load_data(posts_path)
     comments_df = load_data(comments_path)
 
     # Preprocess data

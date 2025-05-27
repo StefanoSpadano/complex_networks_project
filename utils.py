@@ -10,6 +10,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import inspect
 import numpy as np
+import pandas as pd
 
 
 def save_plot(name_hint: str = "", folder: str = ""):
@@ -86,6 +87,12 @@ def compute_flow_values(matrix):
  
      return inter_flows, intra_flows
 
+
+def load_data(path):
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.read_csv(path, lineterminator='\n', engine='python')
 
 # =============================================================================
 # def compute_flow_values(matrix):

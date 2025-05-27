@@ -2,8 +2,26 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utils import categorize_sentiment, compute_flow_values
+from utils import categorize_sentiment, compute_flow_values, load_data
 import numpy as np
+import pandas as pd
+import pytest
+
+def test_load_data(tmp_path):
+    # Create a mock CSV file in a temporary path
+    test_file = tmp_path / "test_data.csv"
+    test_data = "col1,col2\n1,a\n2,b\n"
+    test_file.write_text(test_data)
+
+    # Run the function
+    df = load_data(test_file)
+
+    # Assertions
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape == (2, 2)
+    assert list(df.columns) == ['col1', 'col2']
+    assert df.iloc[0]['col1'] == 1
+    assert df.iloc[1]['col2'] == 'b'
 
 
 

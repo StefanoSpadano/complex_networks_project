@@ -27,8 +27,8 @@ def load_csv(filepath):
         print(f"Error: Parsing issue in file - {filepath}")
         return None
 
-posts_df = load_csv("../data/onepiece_posts.csv")
-comments_df = load_csv("../data/onepiece_comments.csv")
+posts_df = pd.read_csv("../data/onepiece_posts.csv", engine="python")
+comments_df = pd.read_csv("../data/onepiece_comments.csv", engine="python")
 
 if posts_df is None or comments_df is None:
     raise SystemExit("Data loading failed. Exiting script.")
@@ -104,8 +104,8 @@ print(f"Mean: {mean_degree}, Median: {median_degree}, Variance: {variance_degree
 import matplotlib.pyplot as plt
 
 # Load filtered data, adjust path if necessary
-filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv")  
-filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv")  
+filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv", lineterminator="\n")  
+filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv", lineterminator="\n")  
 
 # Attempt to visualize the network as a bipartite graph to distinguish the post layer from commenter layer
 bi_graph_filtered_data = nx.Graph()
@@ -329,8 +329,8 @@ plt.show()
 
 
 # Load data
-filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv")
-filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv")
+filtered_posts = pd.read_csv("../data/onepiece_sentiment_posts_filtered.csv", lineterminator="\n")
+filtered_comments = pd.read_csv("../data/onepiece_sentiment_comments_filtered.csv", lineterminator="\n")
 
 # Create pivot table for comments count by author and post
 heatmap_data = filtered_comments.pivot_table(index='author', columns='post_id', aggfunc='size', fill_value=0)

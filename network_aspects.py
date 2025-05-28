@@ -417,16 +417,18 @@ print("Titles of shared posts:")
 print(shared_post_titles)
 
 # Analyze sentiment distribution for mini-cluster commenters and visualize it as a pie chart
-mini_cluster_comments = filtered_comments[filtered_comments['author'].isin(present_commenters)]
-sentiment_counts = mini_cluster_comments['sentiment_category'].value_counts()
-
-plt.figure(figsize=(8, 8))
-colors = ['#ff9999', '#66b3ff', '#99ff99']
-sentiment_counts.plot.pie(autopct='%1.1f%%', startangle=90, colors=colors, labels=sentiment_counts.index)
-plt.title("Sentiment Distribution for Mini-Cluster Commenters")
-plt.ylabel('')
-save_plot("Sentiment Distribution for Mini-Cluster Commenters","plots/network_aspects_plots")
-plt.show()
+# =============================================================================
+# mini_cluster_comments = filtered_comments[filtered_comments['author'].isin(present_commenters)]
+# sentiment_counts = mini_cluster_comments['sentiment_category'].value_counts()
+# 
+# plt.figure(figsize=(8, 8))
+# colors = ['#ff9999', '#66b3ff', '#99ff99']
+# sentiment_counts.plot.pie(autopct='%1.1f%%', startangle=90, colors=colors, labels=sentiment_counts.index)
+# plt.title("Sentiment Distribution for Mini-Cluster Commenters")
+# plt.ylabel('')
+# save_plot("Sentiment Distribution for Mini-Cluster Commenters","plots/network_aspects_plots")
+# plt.show()
+# =============================================================================
 
 
 #Follows an attempt at simulating propagation of sentiments across the network of commenters

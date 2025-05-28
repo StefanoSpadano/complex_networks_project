@@ -61,10 +61,14 @@ python -m venv my_project_env
 
 Then activate it:
 
--On macOS/Linux: source my_project_env/bin/activate
-
--On Windows (Command Prompt): my_project_env\Scripts\activate.bat
-
+-On macOS/Linux:
+```bash
+source my_project_env/bin/activate
+```
+-On Windows (Command Prompt):
+```bash
+my_project_env\Scripts\activate.bat
+```
 4. **Install dependencies used in this project**
 If using conda, you can install the dependencies with:
 ```bash

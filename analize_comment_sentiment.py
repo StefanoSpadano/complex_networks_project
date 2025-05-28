@@ -14,23 +14,33 @@ import numpy as np
 import powerlaw
 from scipy.stats import pearsonr, spearmanr
 
-from utils import save_plot
+from utils import save_plot, categorize_sentiment, load_data
 
 
 
-def load_comments_data(comments_path):
-    """
-    Load comments data from a CSV file.
+# =============================================================================
+# def load_data(path):
+#     try:
+#         return pd.read_csv(path)
+#     except Exception:
+#         return pd.read_csv(path, lineterminator='\n', engine='python')
+# =============================================================================
 
-    Args:
-        comments_path (str): Path to the comments CSV file.
-
-    Returns:
-        pd.DataFrame: DataFrame containing comments data.
-    """
-    comments_df = pd.read_csv(comments_path)
-    return comments_df
-
+# =============================================================================
+# def load_comments_data(comments_path):
+#     """
+#     Load comments data from a CSV file.
+# 
+#     Args:
+#         comments_path (str): Path to the comments CSV file.
+# 
+#     Returns:
+#         pd.DataFrame: DataFrame containing comments data.
+#     """
+#     comments_df = pd.read_csv(comments_path)
+#     return comments_df
+# 
+# =============================================================================
 
 def filter_comments(comments_df):
     """
@@ -100,22 +110,24 @@ def plot_sentiment_distribution(filtered_comments):
     plt.show()
 
 
-def categorize_sentiment(sentiment_score):
-    """
-    Categorize a sentiment score into 'Positive', 'Neutral', or 'Negative'.
-
-    Args:
-        sentiment_score (float): The sentiment score.
-
-    Returns:
-        str: The sentiment category.
-    """
-    if sentiment_score > 0:
-        return 'Positive'
-    elif sentiment_score < 0:
-        return 'Negative'
-    else:
-        return 'Neutral'
+# =============================================================================
+# def categorize_sentiment(sentiment_score):
+#     """
+#     Categorize a sentiment score into 'Positive', 'Neutral', or 'Negative'.
+# 
+#     Args:
+#         sentiment_score (float): The sentiment score.
+# 
+#     Returns:
+#         str: The sentiment category.
+#     """
+#     if sentiment_score > 0:
+#         return 'Positive'
+#     elif sentiment_score < 0:
+#         return 'Negative'
+#     else:
+#         return 'Neutral'
+# =============================================================================
 
 
 def add_sentiment_category(filtered_comments):
@@ -358,7 +370,7 @@ def main():
     output_path = "../data/onepiece_sentiment_comments_filtered.csv"
 
     # Load comments data
-    comments_df = load_comments_data(comments_path)
+    comments_df = load_data(comments_path)
 
     # Filter comments
     filtered_comments = filter_comments(comments_df)

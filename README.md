@@ -54,11 +54,16 @@ conda create --name my_project_env python=3.9
 conda activate my_project_env
 ```
 
-For standard virtual environment users, open the command prompt terminal, move into the downloaded folder and type:
+For standard virtual environment users, open a terminal (Command Prompt or shell), move into the downloaded folder, and create a virtual environment:
 ```bash
 python -m venv my_project_env
-my_project_env/bin/activate  # On Windows, use: my_project_env\Scripts\activate.bat
 ```
+
+Then activate it:
+
+-On macOS/Linux: source my_project_env/bin/activate
+
+-On Windows (Command Prompt): my_project_env\Scripts\activate.bat
 
 4. **Install dependencies used in this project**
 If using conda, you can install the dependencies with:
@@ -69,6 +74,7 @@ Otherwise:
 ```bash
 pip install -r requirements.txt
 ```
+
 
 
 
@@ -170,6 +176,16 @@ Metrics DataFrames saved.
 5. network_aspects.py
 
 ![Bipartite graph with sentiment weights](images/Bipartite_Graph_with_Sentiment_Weights.png)
+
+## Issues encountered while testing on macOS
+
+If you encounter timeouts or DNS issues when connecting to Reddit utilizing the first script data_collection.py:
+- Try pinging Reddit from your terminal: `ping reddit.com` and check if you see something like 'Request timeout' or '0 packs receveid'.
+- If so, a workaround that worked for me was switching DNS from my wi-fi settings to 8.8.8.8 (Google DNS).
+
+
+The script includes an exponential backoff retry mechanism, but unresolved DNS cannot be handled in code.
+
 
 
 

@@ -273,7 +273,7 @@ def test_save_to_csv_creates_file():
             assert '1,Hello' in lines[1], "First row does not match"
             assert '2,World' in lines[2], "Second row does not match"
 
-def test_given_empty_data_when_saving_to_csv_then_create_csv_with_headers(tmp_path):
+def test_empty_data_when_saving_to_csv(tmp_path):
     """
     Given an empty data list
     when calling save_to_csv
@@ -295,7 +295,7 @@ def test_given_empty_data_when_saving_to_csv_then_create_csv_with_headers(tmp_pa
 
 
 
-def test_given_rate_limit_error_when_fetching_comments_then_retry_and_succeed():
+def test_rate_limit_error():
     """
     Given a Reddit submission that raises a rate limit error initially
     when calling fetch_comments

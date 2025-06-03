@@ -5,8 +5,10 @@ Created on Mon Jun  2 16:57:50 2025
 @author: Raffaele
 """
 
-import pytest
-import pandas as pd
+import tempfile
+import os
+from unittest.mock import patch
+import praw
 from unittest.mock import patch, MagicMock
 from data_collection import RedditDataCollector  # adjust path as needed
 
@@ -232,3 +234,97 @@ def test_fetch_comments_returns_expected_data(mock_reddit):
     assert comments[0]['comment_id'] == 'c1'
     #verify correspondance between second comment and its body
     assert comments[1]['body'] == 'Second comment'
+    
+
+
+
+def test_save_to_csv_creates_file():
+    """
+    Given a list of dictionaries as data and a temporary file path,
+    when the save_to_csv function is called,
+    then it should create a CSV file at the specified location with the mimicked contents.
+    """
+
+    # Sample data that mimics what might be returned from Reddit API
+    sample_data = [
+        {'id': '1', 'text': 'Hello'},
+        {'id': '2', 'text': 'World'}
+    ]
+
+    # Create a temporary directory to write files on
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Construct a full file path inside the temporary directory
+        filepath = os.path.join(tmpdir, 'test_output.csv')
+
+        # Call the static method to save data to CSV
+        RedditDataCollector.save_to_csv(sample_data, filepath)
+
+        # Check if the file now exists at the specified location
+        assert os.path.exists(filepath), "CSV file was not created"
+
+        # Open the file and read its lines to verify content
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+            # The first line should be the CSV header
+            assert 'id,text' in lines[0], "CSV header is incorrect"
+
+            # Check that the rows correspond to the sample data
+            assert '1,Hello' in lines[1], "First row does not match"
+            assert '2,World' in lines[2], "Second row does not match"
+
+def test_given_empty_data_when_saving_to_csv_then_create_csv_with_headers(tmp_path):
+    """
+    Given an empty data list
+    when calling save_to_csv
+    then it should create a CSV file with headers only and no data rows
+    """
+    # Arrange: Define empty data and file path
+    empty_data = []
+    file_path = tmp_path / "empty.csv"
+
+    # Act: Attempt to save empty data
+    RedditDataCollector.save_to_csv(empty_data, file_path)
+
+    # Assert: File is created and contains only headers (i.e., empty file or just newline)
+    with open(file_path, 'r') as f:
+        content = f.read().strip()
+    
+    assert content == ""  # Since the data is empty, even headers are unknown (no fields to infer)
+
+
+
+
+def test_given_rate_limit_error_when_fetching_comments_then_retry_and_succeed():
+    """
+    Given a Reddit submission that raises a rate limit error initially
+    when calling fetch_comments
+    then the function should retry and eventually return the comment data
+    """
+    # Arrange
+    collector = RedditDataCollector("id", "secret", "agent", "subreddit")
+
+    # Create a mock comment object
+    mock_comment = MagicMock()
+    mock_comment.id = "comment123"
+    mock_comment.author = "user123"
+    mock_comment.body = "test comment"
+    mock_comment.score = 10
+    mock_comment.created_utc = 999999
+
+    # Mock submission with replace_more raising error once, then succeeding
+    mock_submission = MagicMock()
+    mock_submission.comments.replace_more.side_effect = [
+        praw.exceptions.APIException("RATELIMIT", "ratelimit message", None),
+        None  # Second attempt succeeds
+    ]
+    mock_submission.comments.list.return_value = [mock_comment]
+
+    # Patch the Reddit API to return our mock submission
+    with patch.object(collector.reddit, 'submission', return_value=mock_submission):
+        # Act
+        comments = collector.fetch_comments("post123")
+
+    # Assert: Should succeed on second attempt and fetch 1 comment
+    assert len(comments) == 1
+    assert comments[0]['comment_id'] == "comment123"

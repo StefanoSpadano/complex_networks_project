@@ -1,5 +1,8 @@
 import pandas as pd
-from analize_metrics import calculate_unique_commenters, preprocess_data, calculate_post_metrics
+import os
+import tempfile
+import pytest
+from analize_metrics import calculate_unique_commenters, preprocess_data, calculate_post_metrics, save_metrics
 
 def test_unique_commenters_correct_counts_are_returned():
     """
@@ -155,3 +158,71 @@ def test_given_multiple_posts_when_calculating_post_metrics_then_correct_metrics
     assert user2_metrics['total_upvotes'] == 30
     assert user2_metrics['average_upvotes_per_post'] == 30
     assert user2_metrics['total_posts'] == 1
+
+
+
+
+def test_save_metrics_saves_csv_with_expected_columns():
+    """
+    Given a sample dataframe containing post and comment metrics and a file path
+    when the function is called
+    then both files should exist and contain the expected columns
+    """
+    
+    #Initialize the sample dataframe with post metrics attributes
+    post_metrics = pd.DataFrame({
+        'post_id': [1],
+        'author': ['user1'],
+        'score': [10],
+        'num_comments': [5],
+        'total_upvotes': [10],
+        'total_comments': [5],
+        'post_count': [1],
+        'average_upvotes_per_post': [10.0],
+        'average_comments_per_post': [5.0],
+        'total_posts': [1]
+    })
+    #Initialize a sample data frame with comment author and its total comments
+    comment_metrics = pd.DataFrame({
+        'author': ['commenter1'],
+        'total_comments': [3]
+    })
+
+    #Create temporary file paths
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        post_path = os.path.join(tmp_dir, "post_metrics.csv")
+        comment_path = os.path.join(tmp_dir, "comment_metrics.csv")
+
+        #Call the save_metrics function
+        save_metrics(post_metrics, comment_metrics, post_path, comment_path)
+
+        #At this point both files should exist and contain expected columns
+        saved_post_df = pd.read_csv(post_path)
+        saved_comment_df = pd.read_csv(comment_path)
+        
+        #Asserts:
+        #Check expected column names
+        assert list(saved_post_df.columns) == list(post_metrics.columns)
+        assert list(saved_comment_df.columns) == list(comment_metrics.columns)
+
+
+
+def test_save_metrics_raises_error_on_invalid_path():
+    """
+    Given a dataframe with minimal attributes
+    when saved into an invalid file path
+    then should raise the correspondent error
+    """
+    
+    #Initialize two dataframes one for post_metrics and one for comment_metrics
+    post_metrics = pd.DataFrame({'author': ['user1'], 'score': [10]})
+    comment_metrics = pd.DataFrame({'author': ['user2'], 'total_comments': [2]})
+
+    #Initialize two invalid file paths
+    invalid_post_path = "/invalid_directory/post_metrics.csv"
+    invalid_comment_path = "/invalid_directory/comment_metrics.csv"
+
+    #Here calling save_metrics should raise an IOError (OSError / FileNotFoundError)
+    with pytest.raises((FileNotFoundError, OSError)):
+        save_metrics(post_metrics, comment_metrics, invalid_post_path, invalid_comment_path)
+

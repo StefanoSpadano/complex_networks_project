@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import tempfile
 import pytest
-from analize_metrics import calculate_unique_commenters, preprocess_data, calculate_post_metrics, save_metrics
+from analize_metrics import calculate_unique_commenters, preprocess_data, calculate_post_metrics, save_metrics, calculate_comment_metrics
 
 def test_unique_commenters_correct_counts_are_returned():
     """
@@ -166,7 +166,7 @@ def test_save_metrics_saves_csv_with_expected_columns():
     """
     Given a sample dataframe containing post and comment metrics and a file path
     when the function is called
-    then both files should exist and contain the expected columns
+    then both files should exist and contain the expected columns.
     """
     
     #Initialize the sample dataframe with post metrics attributes
@@ -211,7 +211,7 @@ def test_save_metrics_raises_error_on_invalid_path():
     """
     Given a dataframe with minimal attributes
     when saved into an invalid file path
-    then should raise the correspondent error
+    then should raise the correspondent error.
     """
     
     #Initialize two dataframes one for post_metrics and one for comment_metrics
@@ -226,3 +226,118 @@ def test_save_metrics_raises_error_on_invalid_path():
     with pytest.raises((FileNotFoundError, OSError)):
         save_metrics(post_metrics, comment_metrics, invalid_post_path, invalid_comment_path)
 
+
+
+def test_post_with_no_comments_should_be_excluded_from_unique_commenters():
+    """
+    Given a post with no comments,
+    when calculate_unique_commenters is called,
+    then the resulting dataframe should be empty (no authors returned).
+    """
+    #Initialize a dataframe with one post by 'user1' and no comments
+    posts_df = pd.DataFrame({'post_id': [1], 'author': ['user1']})
+    comments_df = pd.DataFrame(columns=['post_id', 'author'])  #Empty comment DataFrame
+
+    #Calculating unique commenters
+    result_df = calculate_unique_commenters(posts_df, comments_df)
+
+    #No rows should be returned, since no commenters exist
+    assert result_df.empty
+    assert list(result_df.columns) == ['author', 'unique_commenters']
+
+
+
+
+def test_multiple_posts_same_author_aggregates_unique_commenters():
+    """
+    Given two posts from the same author and multiple unique commenters,
+    when calling the calculate_unique_commenters function,
+    then the correct number of commenters per author should be returned.
+    """
+    #Initialize a dataframe containing two posts by the same author and multiple unique commenters
+    posts_df = pd.DataFrame({
+        'post_id': [1, 2],
+        'author': ['user1', 'user1']  # Same author for both posts
+    })
+    comments_df = pd.DataFrame({
+        'post_id': [1, 1, 2, 2],
+        'author': ['commenter1', 'commenter2', 'commenter3', 'commenter1']  #'commenter1' is repeated
+    })
+
+    #Calculating unique commenters
+    result_df = calculate_unique_commenters(posts_df, comments_df)
+
+    #The author 'user1' should have 3 unique commenters in total
+    expected_df = pd.DataFrame({'author': ['user1'], 'unique_commenters': [3]})
+    pd.testing.assert_frame_equal(result_df.sort_values(by='author').reset_index(drop=True),
+                                  expected_df.sort_values(by='author').reset_index(drop=True))
+
+
+
+def test_post_with_zero_score_and_comments_returns_metrics():
+    """
+    Given a dataframe with only one post that has zero comments and zero score,
+    when calling the function calculate_unique_commenters,
+    then the result should still be returned. 
+    """
+    #Initialize a dataframe with one post that has zero score and comments
+    posts_df = pd.DataFrame({
+        'post_id': [1],
+        'author': ['user1'],
+        'score': [0], #0 score
+        'num_comments': [0] #0 comments
+    })
+
+    #Calculating post metrics
+    result_df = calculate_post_metrics(posts_df)
+
+    #Asserts:
+    #Metrics should still be returned and not raise an error
+    assert result_df.shape[0] == 1
+    assert result_df.loc[0, 'total_upvotes'] == 0
+    assert result_df.loc[0, 'total_comments'] == 0
+    assert result_df.loc[0, 'average_upvotes_per_post'] == 0
+
+
+
+def test_empty_comments_df_returns_empty_metrics():
+    """
+    Given a comments dataframe that is empty (no comments),
+    when we calculate the dataframe metrics,
+    then an empty dataframe should be returned.
+    """
+    #Initialize an empty comments dataframe
+    comments_df = pd.DataFrame(columns=['author', 'body'])
+
+    #Calculating comment metrics
+    result_df = calculate_comment_metrics(comments_df)
+
+    #The result should also be an empty DataFrame
+    assert result_df.empty
+    assert list(result_df.columns) == ['author', 'total_comments']
+
+
+
+
+def test_duplicate_authors_are_aggregated_correctly():
+    """
+    Given a dataframe storing multiple comments from the same user,
+    when calling the calculate_comment_metrics function,
+    then the comments for the same user should be summed up.
+    """
+    #Initialize a comments dataframe with user that commented multiple times
+    comments_df = pd.DataFrame({
+        'author': ['user1', 'user1', 'user2'],
+        'body': ['a', 'b', 'c']
+    })
+
+    #Calculating comment metrics
+    result_df = calculate_comment_metrics(comments_df)
+
+    #'user1' should have 2 comments, 'user2' should have 1
+    expected_df = pd.DataFrame({
+        'author': ['user1', 'user2'],
+        'total_comments': [2, 1]
+    })
+    pd.testing.assert_frame_equal(result_df.sort_values(by='author').reset_index(drop=True),
+                                  expected_df.sort_values(by='author').reset_index(drop=True))

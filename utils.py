@@ -94,26 +94,4 @@ def load_data(path):
     except Exception:
         return pd.read_csv(path, lineterminator='\n', engine='python')
 
-# =============================================================================
-# def compute_flow_values(matrix):
-#     """
-#     Compute inter-community and intra-community flow values.
-#     """
-#     num_communities = matrix.shape[0]
-#     inter_flows = []
-#     intra_flows = []
-# 
-#     for i in range(num_communities):
-#         for j in range(num_communities):
-#             if i == j:
-#                 intra_flows.append((i, matrix[i, j]))
-#             else:
-#                 if matrix[i, j] > 0:
-#                     inter_flows.append((i, j, matrix[i, j]))
-# 
-#     inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
-#     intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
-# 
-#     return inter_flows, intra_flows
-# 
-# =============================================================================
+

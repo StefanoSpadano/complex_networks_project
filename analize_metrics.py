@@ -9,32 +9,6 @@ import pandas as pd
 from utils import load_data
 
 
-# =============================================================================
-# def load_data(path):
-#     try:
-#         return pd.read_csv(path)
-#     except Exception:
-#         return pd.read_csv(path, lineterminator='\n', engine='python')
-# =============================================================================
-
-# =============================================================================
-# def load_data(posts_path, comments_path):
-#     """
-#     Load posts and comments data from CSV files.
-# 
-#     Args:
-#         posts_path (str): Path to the posts CSV file.
-#         comments_path (str): Path to the comments CSV file.
-# 
-#     Returns:
-#         tuple: A tuple containing two DataFrames (posts_df, comments_df).
-#     """
-#     posts_df = pd.read_csv(posts_path)
-#     comments_df = pd.read_csv(comments_path)
-#     return posts_df, comments_df
-# =============================================================================
-
-
 def preprocess_data(posts_df, comments_df):
     """
     Preprocess the posts and comments data.
@@ -49,7 +23,7 @@ def preprocess_data(posts_df, comments_df):
     # Preprocessing for posts_df by removing missing values inside these columns
     posts_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)
     # Fill missing post content with an empty string
-    posts_df['selftext'].fillna('', inplace=True)  
+    posts_df['selftext'] = posts_df['selftext'].fillna('')
 
     # Preprocessing for comments_df by removing missing values inside these columns
     comments_df.dropna(subset=['author', 'created_utc', 'score'], inplace=True)

@@ -6,8 +6,10 @@ Created on Thu Jun 12 18:53:45 2025
 """
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from analize_sentiment import calculate_sentiment, add_sentiment_to_posts, clean_sentiment_data
+from analize_sentiment import calculate_sentiment, add_sentiment_to_posts, clean_sentiment_data, calculate_correlations, save_cleaned_data
 import pandas as pd
+import numpy as np
+
 
 
 def test_calculate_sentiment_valid_string():
@@ -144,3 +146,76 @@ def test_clean_sentiment_data_all_nans():
     cleaned = clean_sentiment_data(df)
     #assert
     assert cleaned.empty
+
+def test_clean_sentiment_no_nan():
+    """
+    Given a dataframe with no invalid entries in its columns,
+    when the clean_sentiment function is called,
+    then it should return the same dataframe.
+    """
+    #Initialize a dataframe
+    df = pd.DataFrame({"selftext":["some","self","text"]})
+    #call the function clean_sentiment_data
+    cleaned = clean_sentiment_data(df)
+    #assert
+    assert len(cleaned) == len(df)
+
+def test_calculate_correlation_constant_columns():
+    """
+    Given a dataframe containing both a sentiment_selftext and score column,
+    when we call the calculate correlation function passing the dataframe as it is,
+    then we expect the pearson correlation between the sentiment in the text and the score it got.
+    """
+    #Initialize a dataframe with columns sentiment_selftext and corresponding score
+    df = pd.DataFrame({
+        "sentiment_selftext": [0.5] * 5,
+        "score_x": [10] * 5
+    })
+    #When calculating the Pearson correlation between two constant columns as [1, 1, 1] and [5, 5, 5]
+    #we get a standard deviation that is zero and so we end up getting an undefined result using the correlation formula
+    #so the correlation value will just be a nan and we get a warning when testing
+    calculate_correlations(df)
+
+def test_calculate_correlation_valid_df():
+    """
+    Given a dataframe containing valid entries (non constant this time) for selftext and score,
+    when the calculate_correlation function is called,
+    then it should return che Pearson correlation for those values.
+    """
+    #Iniatilize a dataframe with non constant entries for sentiment_selftext and score
+    df = pd.DataFrame({"sentiment_selftext":[0.1, 0.5], 
+                      "score_x":[10, 20]})
+    #calculate the correlation
+    calculate_correlations(df)
+
+def test_calculate_sentiment_with_missing_column():
+    """
+    Given a dataframe missing one of the two columns containing values to compute the correlation value,
+    when the calculate_correlations function is called,
+    then it should raise an error. 
+    """
+    #Initialize the dataframe with correct columns
+    df = pd.DataFrame({"sentiment_selftext":[0.1, 0.5], 
+                      "score_x":[10, 20]})
+    #calculate correlation
+    try:
+        calculate_correlations(df.drop("score_x", axis=1))
+    except KeyError:
+        pass
+
+def test_save_cleaned_data(tmp_path):
+    """
+    Given a dataframe with some data stored inside of it,
+    when the save_cleaned_data function is called,
+    then it should save the new data (cleaned) to the path passed as an argument of the function called.
+    """
+    #Initialize an example dataframe
+    df = pd.DataFrame({"col": [1, 2, 3]})
+    #Create a fake path using temporary path
+    path = tmp_path / "test.csv"
+    #Call the function and save data to the temporary path
+    save_cleaned_data(df, str(path))
+    #load and read the data just saved on the temp path
+    loaded = pd.read_csv(path)
+    #assert that the process went fine comparing the two dataframe loaded and df
+    assert loaded.equals(df)

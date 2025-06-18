@@ -46,13 +46,15 @@ def save_plot(name_hint: str = "", folder: str = ""):
     print(f"✅ Plot saved as {full_path}")
     
 
-def categorize_sentiment(score):
-    if score < -0.1:
-        return 'Negative'
-    elif score > 0.1:
+def categorize_sentiment(score, threshold=0.1, epsilon=1e-18):
+    #1e-18 stands for 1^(10)-18
+    if score > threshold + epsilon:
         return 'Positive'
+    elif score < -threshold - epsilon:
+        return 'Negative'
     else:
         return 'Neutral'
+
 
 
 def compute_flow_values(matrix):

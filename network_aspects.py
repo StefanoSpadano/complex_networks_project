@@ -645,12 +645,35 @@ def plot_comment_heatmap(filtered_comments):
     )
 
     plt.figure(figsize=(12, 8))
-    sns.heatmap(heatmap_data, cmap="YlGnBu", cbar=True)
+    vmax = heatmap_data.values.max()
+    vmax = min(vmax, 20)  # clamp at 20 if very skewed
+    sns.heatmap(heatmap_data, cmap="YlGnBu", cbar=True, vmax=vmax)
+
     plt.title("Comment Count Heatmap (Author vs Post)")
     plt.xlabel("Post ID")
     plt.ylabel("Author")
     save_plot("Comment Count Heatmap", "plots/network_aspects_plots")
     plt.show()
+
+def get_top_commenters(filtered_comments, top_k=20):
+    """
+    Automatically extract top commenters by volume.
+    
+    Args:
+        filtered_comments (pd.DataFrame): Comments dataset
+        top_k (int): Number of top commenters to return
+        
+    Returns:
+        list: Top commenter usernames
+    """
+    return (
+        filtered_comments['author']
+        .value_counts()
+        .head(top_k)
+        .index
+        .tolist()
+    )
+
 
 def build_commenter_network(filtered_comments, top_commenters):
     """
@@ -1144,12 +1167,9 @@ def main():
     # Heatmap (opzionale)
     plot_comment_heatmap(filtered_comments)
     
-    top_commenters_list = [
-    'vinsmokewhoswho', 'kidelaleron', 'totally_not_a_reply',
-    'kerriazes', 'idkdidkkdkdj', 'scaptastic', 'nicentra', 'hinrik96'
-    ]
-
+    top_commenters_list = get_top_commenters(filtered_comments, top_k=20)
     commenter_network = build_commenter_network(filtered_comments, top_commenters_list)
+
     mini_cluster_graph = visualize_largest_cluster(commenter_network)
     
     # 1. Calcolo centralità nel mini-cluster

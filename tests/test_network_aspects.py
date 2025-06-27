@@ -8,7 +8,7 @@ Created on Thu Jun 19 18:00:53 2025
 import networkx as nx
 import pandas as pd
 
-from network_aspects import assign_initial_sentiments  
+from network_aspects import assign_initial_sentiments, analyze_central_nodes
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
     """
@@ -107,4 +107,30 @@ def test_assign_initial_sentiments_empty_dataframe_or_graph():
     
     #no nodes have sentiment attribute
     assert all("sentiment" not in empty_graph.nodes[n] for n in empty_graph.nodes)
+
+
+def test_analyze_central_nodes_identifies_high_degree_nodes():
+    """
+    Given a graph with varying degrees,
+    when we want to analyze to 50% of the nodes calling the function analyze_central_nodes,
+    then the degrees should be included.
+    """
+    #Initialize a graph with edges having various degress
+    graph = nx.Graph()
+    graph.add_edges_from([
+        ("A", "B"), ("A", "C"), ("A", "D"), # A has degree 3
+        ("B", "E"),                         # B has degree 2
+        ("C", "F")                          # C has degree 2
+                                            # D, E, F have degree 1
+    ])
+
+    #Call the function analyze_central_nodes to include the 50% percentile
+    result = analyze_central_nodes(graph, percentile=50)
     
+    #extract from result (a dictionary) the list of central_nodes
+    central_nodes = result["central_nodes"]
+
+    #asserts
+    assert "A" in central_nodes
+    assert isinstance(central_nodes, list)
+    assert all(n in graph.nodes for n in central_nodes)

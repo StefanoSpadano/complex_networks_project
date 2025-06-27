@@ -418,6 +418,12 @@ def analyze_central_nodes(graph, percentile=90):
     """
     # Extract degree centrality values
     degree_centrality = nx.degree_centrality(graph)
+    if not degree_centrality:
+        return {
+            'central_nodes': [],
+            'threshold': None,
+            'degree_centrality': {}
+        }
     degree_values = list(degree_centrality.values())
     threshold = np.percentile(degree_values, percentile)
     

@@ -134,3 +134,23 @@ def test_analyze_central_nodes_identifies_high_degree_nodes():
     assert "A" in central_nodes
     assert isinstance(central_nodes, list)
     assert all(n in graph.nodes for n in central_nodes)
+
+
+    
+def test_analyze_central_nodes_returns_empty_on_empty_graph():
+    """
+    Given an empty graph as input,
+    when the function analyze_central_nodes is called,
+    then it should return an empty list.
+   """
+    #Initialize an empty graph
+    graph = nx.Graph()
+
+    #call the function on the empty graph
+    result = analyze_central_nodes(graph)
+    #extract the list of central nodes
+    central_nodes = result["central_nodes"]
+
+    #asserts
+    assert isinstance(central_nodes, list)
+    assert len(central_nodes) == 0

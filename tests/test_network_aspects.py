@@ -85,3 +85,26 @@ def test_assign_initial_sentiments_user_neutral_and_polar_sentiments():
     
     #asserts
     assert assigned["user_in_graph"] == 0.0
+    
+def test_assign_initial_sentiments_empty_dataframe_or_graph():
+    """
+    Given an empty dataframe or graph,
+    when the assign_initial_sentiments function is called passing the empty dataframe or graph to it,
+    then should return an empty dict and assign nothing.
+    """
+    #Initialize an empty graph
+    empty_graph = nx.Graph()
+    
+    #Initialize an empty dataframe
+    empty_df = pd.DataFrame(columns=["author", "sentiment_body"])
+    
+    #call the function
+    assigned = assign_initial_sentiments(empty_df, empty_graph)
+    
+    #asserts
+    #returns empty dict
+    assert assigned == {}
+    
+    #no nodes have sentiment attribute
+    assert all("sentiment" not in empty_graph.nodes[n] for n in empty_graph.nodes)
+    

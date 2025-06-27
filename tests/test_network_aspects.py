@@ -60,3 +60,28 @@ def test_assign_initial_sentiments_user_not_in_graph():
     
     #asserts
     assert len(assigned) == 3
+    
+
+def test_assign_initial_sentiments_user_neutral_and_polar_sentiments():
+    """
+    Given a user with a sentiment mix like [-0.5, 0.5, 0],
+    when the assign_initial_sentiments function is called,
+    then the function should return 0.
+    """
+    #Initialize a graph with a single node
+    graph = nx.Graph()
+    graph.add_nodes_from(["user_in_graph"])
+    
+    #Initialize a dataframe from which we pick the sentiment values
+    data = {
+        "author": ["user_in_graph", "user_in_graph", "user_in_graph"],
+        "sentiment_body": [-0.5, 0.5, 0.0]
+        }
+    
+    df = pd.DataFrame(data)
+    
+    #Call the function
+    assigned = assign_initial_sentiments(df, graph)
+    
+    #asserts
+    assert assigned["user_in_graph"] == 0.0

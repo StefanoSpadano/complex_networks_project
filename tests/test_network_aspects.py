@@ -135,7 +135,6 @@ def test_analyze_central_nodes_identifies_high_degree_nodes():
     assert isinstance(central_nodes, list)
     assert all(n in graph.nodes for n in central_nodes)
 
-
     
 def test_analyze_central_nodes_returns_empty_on_empty_graph():
     """
@@ -154,3 +153,25 @@ def test_analyze_central_nodes_returns_empty_on_empty_graph():
     #asserts
     assert isinstance(central_nodes, list)
     assert len(central_nodes) == 0
+
+def test_analyze_central_nodes_nodes_having_equal_degree():
+    """
+    Given a graph as input with nodes habing all the same degree,
+    when the analyze_central_nodes function is called,
+    then it should return all or none according to threshold set.
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    
+    #add edges so that all nodes have the same degree
+    graph.add_edges_from([
+        ("A","B"),("B", "C"),("C", "A")
+    ])
+    
+    #call the function
+    result = analyze_central_nodes(graph, percentile=100)
+    #extract the list of central nodes
+    central_nodes = result["central_nodes"]
+    
+    #asserts
+    assert set(central_nodes) == {"A", "B", "C"}

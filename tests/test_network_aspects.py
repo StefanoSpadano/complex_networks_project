@@ -8,7 +8,8 @@ Created on Thu Jun 19 18:00:53 2025
 import networkx as nx
 import pandas as pd
 
-from network_aspects import assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality
+from network_aspects import assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality, calculate_sentiment_influence
+
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
     """
@@ -246,4 +247,101 @@ def test_compute_mini_cluster_centrality_single_node_graph():
     #Asserts
     assert df.loc["A", "betweenness"] == 0
     assert df.loc["A", "closeness"] == 0
+
+
+def test_sentiment_influence_counts_shared_neighbors():
+    """
+    Given a graph with known sentiments associated to each node,
+    when calculating sentiment influence,
+    then the correct influences should be returned.
+    """
+    #Initialize a graph and add edges
+    G = nx.Graph()
+    G.add_edges_from([("A", "B"), ("A", "C"), ("A", "D"), ("B", "C")])
+    #set node sentiments for each node
+    nx.set_node_attributes(G, {
+        "A": {"sentiment": 1},
+        "B": {"sentiment": 1},
+        "C": {"sentiment": -1},
+        "D": {"sentiment": 1}
+    })
+
+    #Calculating sentiment influence
+    result = calculate_sentiment_influence(G)
+
+    #Node A has 2 neighbors with same sentiment (B and D), 1 different (C)
+    assert result["A"] == 2
+    assert result["B"] == 1  # only A
+    assert result["C"] == 0  # all neighbors are different
+    assert result["D"] == 1  # only A
+
+def test_sentiment_influence_isolated_node():
+    """
+    Given a graph with an isolated node,
+    when calculating the sentiment influence,
+    then its influence score should be zero. 
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "A")])
+    #initialize an isolated node
+    graph.add_node("D")
+    #set node sentiments
+    nx.set_node_attributes(graph, {
+        "A": {"sentiment":1},
+        "B": {"sentiment": -1},
+        "C": {"sentiment": 1},
+        "D": {"sentiment": 1}
+        })
     
+    #calculate sentiment influence
+    result = calculate_sentiment_influence(graph)
+    
+    #assert
+    assert result["D"] == 0
+    
+def test_sentiment_influence_all_neighbors_have_same_influence():
+    """
+    Given a graph with nodes having all the same sentiment,
+    when the calculate sentiment influence function is called,
+    then the influence score should be equal to the number of nodes in the graph.
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "A")])
+    
+    #set the nodes to have all the same sentiment
+    nx.set_node_attributes(graph, {
+        "A": {"sentiment": 1},
+        "B": {"sentiment": 1},
+        "C": {"sentiment": 1}
+        })
+    
+    #call the function
+    result = calculate_sentiment_influence(graph)
+    
+    #asserts
+    #sentiment influence should be 2 because one node doesnt influence itself
+    assert result["A"] == result ["B"] == result["C"] == 2
+
+def test_sentiment_influence_no_attribute_present():
+    """
+    Given a graph with sentiment attributes in each node except one,
+    when the function calculate_sentiment_infuence is called,
+    then return zero or skip it. 
+    """
+    #initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "A")])
+    
+    #set node attributes
+    nx.set_node_attributes(graph, {
+        "A": {"sentiment": 1},
+        "B": {"sentiment": 1}
+        })
+    
+    #call the function
+    result = calculate_sentiment_influence(graph)
+    
+    #asserts
+    assert result["C"] == 0

@@ -8,7 +8,7 @@ Created on Thu Jun 19 18:00:53 2025
 import networkx as nx
 import pandas as pd
 
-from network_aspects import assign_initial_sentiments, analyze_central_nodes
+from network_aspects import assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
     """
@@ -175,3 +175,75 @@ def test_analyze_central_nodes_nodes_having_equal_degree():
     
     #asserts
     assert set(central_nodes) == {"A", "B", "C"}
+
+
+def test_compute_mini_cluster_centrality_on_triangle_graph():
+    """
+    Given a graph with some nodes and edges between nodes,
+    when we call the function to compute centrality measures,
+    then we get correct values from the centralities we are interested in.
+    """
+    #Initialize a graph, a triangle graph here for semplicity
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "A")])
+
+    #Call the function to compute centralities (in a mini cluster in my case)
+    df = compute_mini_cluster_centrality(graph)
+
+    #Assert that all nodes should have the same centrality values
+    assert isinstance(df, pd.DataFrame)
+    assert set(df.columns) == {"degree", "betweenness", "closeness"}
+    assert set(df.index) == {"A", "B", "C"}
+
+    #All degree centralities should be equal and equal to 1.0 (because of the way we defined our graph from the start)
+    assert all(df["degree"] == 1.0)
+
+    #All closeness centralities should be equal and between 0 and 1
+    closeness_vals = df["closeness"].unique()
+    assert len(closeness_vals) == 1
+    assert 0 < closeness_vals[0] <= 1
+
+    #Betweenness should be zero in a fully connected triangle
+    assert all(df["betweenness"] == 0)
+
+def test_compute_mini_cluster_centrality_disconnected_graph():
+    """
+    Given a graph in which we have a node which is not connected to anything,
+    when we call the compute mini cluster centrality function,
+    then we expect for that node to have a closeness and betweenness centrality of zero.
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([
+        ("A", "B"),  ("B", "A")
+        ])
+    #We have to explicitly define a disconnected node
+    graph.add_node("C")
+    
+    #Call the function to compute mini cluster centralities
+    df = compute_mini_cluster_centrality(graph)
+    
+    #Asserts
+    #Access the corresponding row of the second column
+    assert df["betweenness"].iloc[2] == 0
+    #Another way to access the closeness value of the disconnected node
+    assert df.loc["C", "closeness"] == 0
+    
+def test_compute_mini_cluster_centrality_single_node_graph():
+    """
+    Given a graph with a single node and no connections,
+    when the compute centrality function is called,
+    then it should return zero for both closeness and betweenness.
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    #add a node
+    graph.add_node("A")
+    
+    #call the function
+    df = compute_mini_cluster_centrality(graph)
+    
+    #Asserts
+    assert df.loc["A", "betweenness"] == 0
+    assert df.loc["A", "closeness"] == 0
+    

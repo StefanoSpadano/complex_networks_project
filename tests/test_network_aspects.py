@@ -417,7 +417,7 @@ def test_sentiment_flow_matrix_missing_sentiment_on_one_node():
     #assign sentiments to nodes
     nx.set_node_attributes(graph, {
         "A":1, "C":-1
-        } , name="sentiment")
+        }, name="sentiment")
     
     #call the function
     matrix = compute_sentiment_flow_matrix(graph, partition)
@@ -428,6 +428,87 @@ def test_sentiment_flow_matrix_missing_sentiment_on_one_node():
     assert matrix [0,0] == 0.0
     assert matrix [1,0] == 0.0
     assert matrix [1,1] == 0.0
+    
+def test_sentiment_flow_matrix_wighted_graph():
+    """
+    Given a graph with nodes A and B having the same sentiment and the edge A-B has a weight different than 1,
+    when computing the sentiment flow matrix,
+    then we expect that the matrix has the corresponding value in the corresponding place.
+    """
+    #initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("A", "C")])
+    
+    #assign nodes to different communities
+    partition = {"A":0, "B":1, "C":1}
+    
+    #assign node sentiment
+    nx.set_node_attributes(graph, {
+        "A":1, "B":1, "C":-1
+        }, name = "sentiment")
+    
+    #modify the weight for edge A-B
+    graph["A"]["B"]["weight"] = 5
+
+    
+    #call the function
+    matrix = compute_sentiment_flow_matrix(graph, partition)
+    #asserts
+    assert matrix.shape == (2,2)
+    assert matrix [0,1] == 5.0
+    assert matrix [1,0] == 5.0
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 
 

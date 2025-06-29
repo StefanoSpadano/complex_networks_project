@@ -8,7 +8,8 @@ Created on Thu Jun 19 18:00:53 2025
 import networkx as nx
 import pandas as pd
 
-from network_aspects import assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality, calculate_sentiment_influence
+from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
+                             calculate_sentiment_influence, compute_sentiment_flow_matrix)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -345,3 +346,88 @@ def test_sentiment_influence_no_attribute_present():
     
     #asserts
     assert result["C"] == 0
+    
+
+def test_sentiment_flow_matrix_basic_case():
+    """
+    Given nodes connected with some sentimentes,
+    when the compute sentiment flow matrix is called,
+    then it should return the correct flow of sentiments (sentiments are summed if they are aligned).
+    """
+    #Initialize a graph
+    G = nx.Graph()
+    G.add_edges_from([("A", "B"), ("A", "C")])
+    
+    #assign nodes to different communities
+    partition = {"A": 0, "B": 1, "C": 1}
+    #assign sentiments to each node
+    nx.set_node_attributes(G, {"A": 1, "B": 1, "C": -1}, name="sentiment")
+    
+    #call the function
+    matrix = compute_sentiment_flow_matrix(G, partition)
+    #print to check
+    print("Matrix:\n", matrix)
+
+    # Only A–B should be counted, same sentiment
+    assert matrix.shape == (2, 2)
+    assert matrix[0, 1] == 1.0
+    assert matrix[1, 0] == 1.0
+    assert matrix[0, 0] == 0.0
+    assert matrix[1, 1] == 0.0
+    
+def test_sentiment_flow_matrix_edges_different_sentiment():
+    """
+    Given a graph where nodes A and B are in different communities and they have different sentiments,
+    when the function compute sentiment flow matrix is called,
+    then it should return a matrix of all zeros (no shared sentiment).
+    """
+    #Initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("A", "C")])
+    
+    #assign nodes to different communities
+    partition = {"A":0, "B":1, "C":1}
+    
+    #assign sentiments to the nodes
+    nx.set_node_attributes(graph, {"A": 1, "B":-1, "C":-1}, name = "sentiment")
+    
+    #call the function that returns a matrix with flow values from different communities
+    matrix = compute_sentiment_flow_matrix(graph, partition)
+    
+    #asserts
+    assert matrix.shape == (2,2)
+    assert matrix [0,1] == 0.0
+    assert matrix [0,0] == 0.0
+    assert matrix [1,0] == 0.0
+    assert matrix [1,1] == 0.0
+    
+def test_sentiment_flow_matrix_missing_sentiment_on_one_node():
+    """
+    Given a graph where node A has a sentiment and node B has no sentiment at all,
+    when computing the matrix of sentiment flow values,
+    then the edge with missing sentiment should not be included.
+    """
+    #initialize a graph
+    graph = nx.Graph()
+    graph.add_edges_from([("A", "B"), ("A", "C")])
+    
+    #assign nodes to different communities
+    partition = {"A":0, "B":1, "C":1}
+    
+    #assign sentiments to nodes
+    nx.set_node_attributes(graph, {
+        "A":1, "C":-1
+        } , name="sentiment")
+    
+    #call the function
+    matrix = compute_sentiment_flow_matrix(graph, partition)
+    
+    #asserts
+    assert matrix.shape == (2,2)
+    assert matrix [0,1] == 0.0
+    assert matrix [0,0] == 0.0
+    assert matrix [1,0] == 0.0
+    assert matrix [1,1] == 0.0
+
+
+

@@ -1079,6 +1079,7 @@ def compute_modularity(graph, partition):
     print(f"Modularity Score: {modularity:.4f}")
     return modularity
 
+
 def compute_sentiment_flow_matrix(graph, partition):
     """
     Create a matrix of sentiment-aligned flows between communities.
@@ -1095,14 +1096,17 @@ def compute_sentiment_flow_matrix(graph, partition):
 
     for u, v, d in graph.edges(data=True):
         cu, cv = partition[u], partition[v]
-        s_u = graph.nodes[u].get('sentiment')
-        s_v = graph.nodes[v].get('sentiment')
-        weight = d.get('weight', 1)
-
-        if s_u == s_v and s_u is not None:
-            matrix[cu, cv] += weight
+        su = graph.nodes[u].get("sentiment")
+        sv = graph.nodes[v].get("sentiment")
+        weight = d.get("weight", 1)
+        
+        if su is not None and sv is not None and su == sv:
+           matrix[cu][cv] += weight
+           if cu != cv:
+            matrix[cv][cu] += weight  # this line adds symmetry
 
     return matrix
+
 
 def visualize_sentiment_flow(matrix, title="Sentiment Flow Matrix Heatmap"):
     """

@@ -9,7 +9,8 @@ import networkx as nx
 import pandas as pd
 
 from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
-                             calculate_sentiment_influence, compute_sentiment_flow_matrix)
+                             calculate_sentiment_influence, compute_sentiment_flow_matrix, identify_shared_posts,
+                             analyze_post_engagement)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -458,7 +459,159 @@ def test_sentiment_flow_matrix_wighted_graph():
     assert matrix [0,1] == 5.0
     assert matrix [1,0] == 5.0
     
+
+def test_identify_shared_posts_finds_common_posts():
+    """
+    Given a set of comments where two cluster users comment on the same post,
+    when identify_shared_posts is called,
+    then it should return that post ID and its title.
+    """
+    #Initialize a comments dataframe with author and post_id columns
+    filtered_comments = pd.DataFrame({
+        "author": ["user1", "user2", "user3"],
+        "post_id": ["post1", "post1", "post2"]
+    })
     
+    #initialize a posts dataframe with post_id and title columns
+    filtered_posts = pd.DataFrame({
+        "post_id": ["post1", "post2"],
+        "title": ["Shared Theory", "Solo Post"]
+    })
+    
+    #initialize some users being in the cluster
+    cluster_nodes = {"user1", "user2"}
+
+    #call the function
+    result = identify_shared_posts(filtered_comments, filtered_posts, cluster_nodes)
+
+    #asserts
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 1
+    assert result.iloc[0]["post_id"] == "post1"
+    assert result.iloc[0]["title"] == "Shared Theory"
+    
+def test_identify_shared_posts_only_one_commenter_in_the_cluster():
+    """
+    Given a dataframe containing a post commented by only one user which is member of a cluster,
+    when calling the function identify shared posts,
+    then the post should not be included in the result.
+    """
+    #Initialize a comments dataframe 
+    filtered_comments = pd.DataFrame({
+        "author":["user1", "user2", "user3"],
+        "post_id":["post1", "post2", "post3"] #3 different post ids this time
+        })
+    #initialize posts dataframe
+    filtered_posts = pd.DataFrame({
+        "post_id":["post_1", "post_2", "post_3"],
+        "title":["A post that is not shared", "Another post not shared", "The third post not shared today"]
+        })
+     
+    #initialize cluster nodes
+    cluster_nodes = {"user1", "user3"}
+    
+    #call the function
+    result = identify_shared_posts(filtered_comments, filtered_posts, cluster_nodes)
+    
+    #asserts
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 0
+
+def test_identify_shared_posts_users_comment_multiple_times():
+    """
+    Given that user1 and user2 commented multiple times on the same post,
+    when the function identify shared posts is called,
+    then it the post should appear only once in the result.
+    """
+    #Initialize a comments dataframe
+    filtered_comments = pd.DataFrame({
+        "author":["user1","user2", "user1", "user2"],
+        "post_id":["post1", "post1", "post1", "post1"] #user1 and user2 commented 2 times each on the same post
+        })
+    #initialize posts dataframe
+    filtered_posts = pd.DataFrame({
+        "post_id":["post1"],
+        "title":["Shared post"]
+        })
+    #initialize cluster nodes
+    cluster_nodes = {"user1", "user2"}
+    
+    #call the function
+    result = identify_shared_posts(filtered_comments, filtered_posts, cluster_nodes)
+    
+    #asserts
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 1
+
+def test_analyze_post_engagement_returns_expected_summary():
+    """
+    GIVEN a dataset where one post is heavily commented and others are not,
+    WHEN calling analyze_post_engagement,
+    THEN it should return only that high-engagement post with correct stats.
+    """
+    #initialize a dataframe with authors and post_ids
+    df = pd.DataFrame({
+        "author": ["a"] * 5 + ["b", "c", "d", "e", "f"],
+        "post_id": ["post1"] * 5 + ["post2"] * 5
+    })
+    
+    #call the function
+    result = analyze_post_engagement(df, percentile=50)
+    
+    #asserts
+    assert isinstance(result, pd.DataFrame)
+    assert "post_id" in result.columns
+    assert "unique_commenters" in result.columns
+    assert result.shape[0] == 2
+    
+    # Make sure both post1 and post2 are present
+    post_ids = result["post_id"].tolist()
+    assert "post1" in post_ids
+    assert "post2" in post_ids
+
+    # Check stats for post2
+    post2_data = result[result["post_id"] == "post2"].iloc[0]
+    assert post2_data["unique_commenters"] == 5
+    assert post2_data["total_comments"] == 5
+    assert post2_data["top_commenter_count"] == 1
+
+    # Optionally also check post1
+    post1_data = result[result["post_id"] == "post1"].iloc[0]
+    assert post1_data["unique_commenters"] == 1
+    assert post1_data["total_comments"] == 5
+    assert post1_data["top_commenter_count"] == 5
+    
+def test_analyze_post_engagement_all_posts_have_same_number_of_comments():
+    """
+    Given that post1, post2 and post3 have all the same number of comments,
+    when the function analyze_post_engagement is called,
+    then it should return top_posts_ids as empty.
+    """
+    #initialize a dataframe with authors and post_ids
+    df = pd.DataFrame({
+        "author":["A"]*3+["B"]*3+["C"]*3, #arrays should have same dimensions; we could even user 9 different authors
+        "post_id":["post1"]*3+["post2"]*3+["post3"]*3
+        })
+    
+    #call the function
+    result = analyze_post_engagement(df, percentile=90)
+    
+    #asserts
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape[0] == 3 #all posts included
+    
+    #convert result["post_id"] into a list so that we can check that all 3 posts are present
+    post_ids = result["post_id"].tolist()
+    assert set(post_ids) == {"post1", "post2", "post3"}
+    
+    # Validate stats for one post (they're all the same)
+    for pid in ["post1", "post2", "post3"]:
+        row = result[result["post_id"] == pid].iloc[0]
+        assert row["total_comments"] == 3
+        assert row["unique_commenters"] == 1
+        assert row["top_commenter_count"] == 3
+    
+
     
     
     

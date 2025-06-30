@@ -606,26 +606,40 @@ def plot_comment_distributions(graph, central_nodes, title_suffix="High Centrali
 def analyze_post_engagement(filtered_comments, percentile=90):
     """
     Analyze high-engagement posts and top commenters.
-    
+
     Args:
-        filtered_comments (pd.DataFrame): DataFrame with comments and post_id
-        percentile (int): Top percentile threshold (default 90)
-    
+        filtered_comments (pd.DataFrame): DataFrame with 'author' and 'post_id'
+        percentile (int): Top percentile threshold
+
     Returns:
-        pd.DataFrame: Summary of top posts with commenter stats
+        pd.DataFrame: Summary DataFrame with post_id and engagement stats
     """
-    # Pivot table (rows: authors, columns: post_id, values: comment counts)
+    if filtered_comments.empty or "author" not in filtered_comments.columns or "post_id" not in filtered_comments.columns:
+        return pd.DataFrame(columns=[
+            "post_id", "unique_commenters", "total_comments", "top_commenter", "top_commenter_count"
+        ])
+
     heatmap_data = filtered_comments.pivot_table(
         index='author', columns='post_id', aggfunc='size', fill_value=0
     )
 
     post_engagement = heatmap_data.sum(axis=0)
+    if post_engagement.empty:
+        return pd.DataFrame(columns=[
+            "post_id", "unique_commenters", "total_comments", "top_commenter", "top_commenter_count"
+        ])
+
     threshold = post_engagement.quantile(percentile / 100)
-    high_engagement_posts = post_engagement[post_engagement > threshold].index
+    high_engagement_posts = post_engagement[post_engagement >= threshold].index
 
     high_engagement_comments = filtered_comments[
         filtered_comments['post_id'].isin(high_engagement_posts)
     ]
+
+    if high_engagement_comments.empty:
+        return pd.DataFrame(columns=[
+            "post_id", "unique_commenters", "total_comments", "top_commenter", "top_commenter_count"
+        ])
 
     commenter_stats = high_engagement_comments.groupby('post_id').agg(
         unique_commenters=('author', 'nunique'),
@@ -635,6 +649,7 @@ def analyze_post_engagement(filtered_comments, percentile=90):
     ).reset_index()
 
     return commenter_stats
+
 
 def plot_comment_heatmap(filtered_comments):
     """

@@ -10,7 +10,7 @@ import pandas as pd
 
 from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
                              calculate_sentiment_influence, compute_sentiment_flow_matrix, identify_shared_posts,
-                             analyze_post_engagement)
+                             analyze_post_engagement, get_top_commenters)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -605,17 +605,131 @@ def test_analyze_post_engagement_all_posts_have_same_number_of_comments():
     assert set(post_ids) == {"post1", "post2", "post3"}
     
     # Validate stats for one post (they're all the same)
-    for pid in ["post1", "post2", "post3"]:
-        row = result[result["post_id"] == pid].iloc[0]
+    for post_id in ["post1", "post2", "post3"]:
+        row = result[result["post_id"] == post_id].iloc[0]
         assert row["total_comments"] == 3
         assert row["unique_commenters"] == 1
         assert row["top_commenter_count"] == 3
+        
+def test_analyze_post_engagement_empty_dataframe():
+    """
+    Given an empty dataframe of comments,
+    when the function is called,
+    then it should return an empty dataframe.
+    """
+    #Initialize an empty dataframe
+    df = pd.DataFrame({
+        "author":[],
+        "post_id":[]
+        })
+    
+    #call the function
+    result = analyze_post_engagement(df, percentile=90)
+    
+    assert result.empty
+    
+def test_analyze_post_engagement_one_post_only():
+    """
+    Given a dataframe with one post and few comments, 
+    when the function is called,
+    then the post should be included in the result regardless of the percentile used.
+    """
+    #Initialize a dataframe with one post only
+    df = pd.DataFrame({
+        "author":["author1", "author2", "author3", "author4","author5"],
+        "post_id":["post1"]*5 #pandas expect arrays to be the same lenght
+        })
+    
+    #call the function
+    result = analyze_post_engagement(df, percentile=90)
+    result_99_9 = analyze_post_engagement(df, percentile=99.9)
+    
+    assert not result.empty
+    assert not result_99_9.empty
     
 
+def test_get_top_commenters_returns_most_active_users():
+    """
+    Given a comment dataframe with several users making different numbers of comments,
+    when get_top_commenters is called with top_k=3,
+    then it should return the top 3 authors in correct order of activity.
+    """
+    #Initialize a dataframe with the frequency of comments made by users
+    df = pd.DataFrame({
+        "author": [
+            "user1", "user1", "user1",   # 3 comments
+            "user2", "user2",            # 2 comments
+            "user3",                     # 1 comment
+            "user4", "user4", "user4", "user4"  # 4 comments
+        ]
+    })
     
+    #call the function
+    result = get_top_commenters(df, top_k=3)
     
+    #asserts
+    assert isinstance(result, list)
+    assert len(result) == 3
+    assert result[0] == "user4"  # Most comments
+    assert result[1] == "user1"
+    assert result[2] == "user2"
+
+def test_get_top_commenters_fewer_than_top_k_commenters():
+    """
+    Given a dataframe with only 2 authors,
+    when calling the function get_top_commenters with k=5,
+    then it should return only the top 2 authors.
+    """
+    #initialie a dataframe with only two authors
+    df = pd.DataFrame({
+        "author":[
+            "user1", "user1",
+            "user2", "user2", "user2"
+            ]
+        })
     
+    #call the function
+    result = get_top_commenters(df, top_k=5)
     
+    assert isinstance(result, list)
+    assert len(result) == 2 
+    assert result[0] == "user2"
+    assert result[1] == "user1"
+    
+def test_get_top_commenters_empty_dataframe():
+    """
+    Given an empty dataframe,
+    when calling the function get_top_commenters,
+    then it should return an empty list.
+    """
+    #initialize an empty dataframe
+    df = pd.DataFrame({
+        "author":[]
+        })
+    #call the function
+    result = get_top_commenters(df, top_k=2)
+    
+    assert result == []
+    
+def test_get_top_commenters_tie_between_authors():
+    """
+    Given a dataframe containing two users with the same number of comments,
+    when the get_top_comments function is called,
+    then it should return both the users are included.
+    """
+    #initialize a dataframe
+    df = pd.DataFrame({
+        "author":[
+            "user1", "user1",
+            "user2", "user2"
+            ]
+        })
+    
+    #call the function
+    result = get_top_commenters(df, top_k=2)
+    
+    assert len(result) == 2
+    assert result[0] == "user1" #when tied, the alphabetical order is chosen
     
     
     

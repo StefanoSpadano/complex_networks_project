@@ -10,7 +10,7 @@ import pandas as pd
 
 from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
                              calculate_sentiment_influence, compute_sentiment_flow_matrix, identify_shared_posts,
-                             analyze_post_engagement, get_top_commenters)
+                             analyze_post_engagement, get_top_commenters, build_commenter_network)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -730,12 +730,95 @@ def test_get_top_commenters_tie_between_authors():
     
     assert len(result) == 2
     assert result[0] == "user1" #when tied, the alphabetical order is chosen
+
+def test_build_commenter_network_creates_edges_between_shared_post_commenters():
+    """
+    Given a DataFrame where two top users comment on the same post,
+    when build_commenter_network is called,
+    then the graph should contain an edge between them with weight 1.
+    """
+    #initialize a comment dataframe
+    comments = pd.DataFrame({
+        "author": ["user1", "user2", "user3", "user1", "user3"],
+        "post_id": ["postA", "postA", "postB", "postC", "postC"]
+    })
     
+    #initialize top commenters
+    top_commenters = ["user1", "user2", "user3"]
     
+    #initialize the graph
+    graph = build_commenter_network(comments, top_commenters)
     
+    #check that the graph has been created
+    assert isinstance(graph, nx.Graph)
+    #check that top_commenters are in the graph nodes
+    assert set(graph.nodes) == set(top_commenters)
+    #check edges between top commenters
+    assert ("user1", "user2") in graph.edges
+    assert ("user1", "user3") in graph.edges
+    #check for weights
+    assert graph["user1"]["user2"]["weight"] == 1
+    assert graph["user1"]["user3"]["weight"] == 1
     
+def test_build_commenter_network_users_comment_on_different_posts():
+    """
+    Given top commenters who never share the same post,
+    when the build_top_commenter function is called,
+    then no edges should be created in the graph.
+    """
+    #initialize a comment dataframe
+    comments = pd.DataFrame({
+        "author":["user1", "user2", "user3"],
+        "post_id":["post_id_not_shared_by_user2_and_user3",
+                   "post_id_not_shared_by_user1_and_user3",
+                   "post_id_not_shared_by_user2_and_user1"]
+        })
     
+    #initialize top commenters
+    top_commenters = ["user1", "user2", "user3"]
+    #initialize the graph
+    graph = build_commenter_network(comments, top_commenters)
+    #asserts
+    assert graph.number_of_edges() == 0
     
+def test_build_commenter_network_author_not_in_top_commenter_list():
+    """
+    Given a comment thread where a non top commenter is present,
+    when the function build_commenter_network is called,
+    then the user should not appear in the network.
+    """
+    #initialize a comment dataframe
+    comments = pd.DataFrame({
+        "author":["user1", "user2", "user3"],
+        "post_id":["post_id_1", "post_id_2","post_id_3"]
+        })
+    #initialize top commenters
+    top_commenters = ["user1", "user2"]
+    #initialize graph 
+    graph = build_commenter_network(comments, top_commenters)
+    
+    assert set(graph.nodes) == set(top_commenters)
+    assert not ("user1", "user3") in graph.edges
+    assert not ("user2", "user3") in graph.edges
+    
+def test_build_commenter_network_multiple_shared_posts_between_same_users():
+    """
+    Given two users co-commenting on multiple posts,
+    when the function build_commenter_network is called,
+    then the edge weight between them should reflect the number of posts shared.
+    """
+    #initialize comments dataframe
+    comments = pd.DataFrame({
+        "author":["user1", "user2", "user1", "user2"],
+        "post_id":["post1", "post1", "post2", "post2"]
+        })
+    #initialize top commenters
+    top_commenters = ["user1", "user2"]
+    #initialize graph
+    graph = build_commenter_network(comments, top_commenters)
+    
+    assert graph["user1"]["user2"]["weight"] == 2 #2 is the number of shared posts
+
     
     
     

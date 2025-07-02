@@ -10,7 +10,8 @@ import pandas as pd
 
 from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
                              calculate_sentiment_influence, compute_sentiment_flow_matrix, identify_shared_posts,
-                             analyze_post_engagement, get_top_commenters, build_commenter_network)
+                             analyze_post_engagement, get_top_commenters, build_commenter_network, detect_communities_louvain,
+                             compute_modularity, calculate_sentiment_influence)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -819,17 +820,141 @@ def test_build_commenter_network_multiple_shared_posts_between_same_users():
     
     assert graph["user1"]["user2"]["weight"] == 2 #2 is the number of shared posts
 
+def test_detect_communities_louvain_returns_valid_partition():
+    """
+    Given a graph with two disconnected clusters,
+    when detect_communities_louvain is called,
+    then it should assign distinct communities to each cluster's nodes.
+    """
+    #Build graph with two clear communities
+    G = nx.Graph()
+    G.add_edges_from([("A", "B"), ("B", "C")])         # Cluster 1
+    G.add_edges_from([("X", "Y"), ("Y", "Z")])         # Cluster 2
     
+    #call the function
+    partition = detect_communities_louvain(G)
+
+    assert isinstance(partition, dict)
+    assert set(G.nodes()) == set(partition.keys())
     
+    communities = set(partition.values())
+    assert len(communities) == 2  # Expect 2 communities
     
+def test_detect_communities_louvain_graph_with_no_edges():
+    """
+    Given a graph with nodes but no edges connecting them,
+    when the detect_communities_louvain function is called,
+    then each node should be in its own community.
+    """
+    #Build a graph with nodes but no edges
+    graph = nx.Graph()
+    graph.add_nodes_from(["A", "B", "C"])
     
+    #call the function
+    partition = detect_communities_louvain(graph)
+    communities = set(partition.values())
     
+    assert isinstance(partition, dict)
+    assert len(communities) == 3 #3 communities expected
     
+def test_detect_communities_louvain_fully_connected_graph():
+    """
+    Given a fully connected graph made of 5 nodes,
+    when the detect_communities_louvain function is called,
+    then it should return a single community.
+    """
+    #build the graph
+    graph = nx.Graph()
+    graph = nx.complete_graph(["A", "B", "C", "D", "E"]) #force a full connected graph
     
+    #call the function
+    partition = detect_communities_louvain(graph)
+    communities = set(partition.values())
     
+    assert isinstance(partition, dict)
+    assert len(communities) == 1    
+
+
+def test_compute_modularity_detects_strong_community_structure():
+    """
+    Given a graph with two dense communities and no interconnection,
+    when compute_modularity is called with the correct partition,
+    then it should return a high modularity score (close to 1.0).
+    """
+    G = nx.Graph()
+
+    #Community 0: A-B-C
+    G.add_edges_from([("A", "B"), ("B", "C"), ("A", "C")])
+
+    #Community 1: X-Y-Z
+    G.add_edges_from([("X", "Y"), ("Y", "Z"), ("X", "Z")])
+
+    partition = {
+        "A": 0, "B": 0, "C": 0,
+        "X": 1, "Y": 1, "Z": 1
+    }
+
+    modularity = compute_modularity(G, partition)
+
+    assert isinstance(modularity, float)
+    assert 0.4 <= modularity <= 1.0  # very strong modular structure
+   
+def test_compute_modularity_all_nodes_in_one_community():
+    """
+    Given a graph with multiple edges and nodes placed in the same community,
+    when the function compute_modularity is called
+    then it should return a low modularity near 0.
+    """
+    graph = nx.Graph()
     
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "D"), ("D","A")])
     
+    partition = {
+        "A":0, "B":0, "C":0, "D":0
+        }
     
+    modularity = compute_modularity(graph, partition)
+    
+    assert isinstance(modularity, float)
+    assert modularity <= 0 #should be smaller than zero or something around zero
+    
+def test_compute_modularity_each_node_in_its_own_community():
+    """
+    Given a graph with multiple nodes each in its own community,
+    when the function compute_modularity is called,
+    then it should return something negative or close to 0.
+    """
+    graph = nx.Graph()
+    
+    graph.add_edges_from([("A", "B"), ("B", "C"), ("C", "D"), ("D","A")])
+
+    
+    partition = {
+        "A":0, "B":1, "C":2, "D":3
+        }
+    
+    modularity = compute_modularity(graph, partition)
+    
+    assert isinstance(modularity, float)
+    assert modularity <= 0
+    
+def test_calculate_sentiment_influence_basic_case():
+    """
+    GIVEN a graph where node A has neighbors with matching sentiment,
+    WHEN calculate_sentiment_influence is called,
+    THEN it should return a score of 1.0 for A.
+    """
+    G = nx.Graph()
+    G.add_edges_from([("A", "B"), ("A", "C")])
+    nx.set_node_attributes(G, {"A": 1, "B": 1, "C": 1}, name="sentiment")
+
+    influence = calculate_sentiment_influence(G)
+
+    assert isinstance(influence, dict)
+    assert influence["A"] == 2.0
+    assert influence["B"] == 1.0  # B has only A as neighbor with same sentiment
+    assert influence["C"] == 1.0
+
     
     
     

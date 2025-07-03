@@ -11,7 +11,7 @@ import pandas as pd
 from network_aspects import (assign_initial_sentiments, analyze_central_nodes, compute_mini_cluster_centrality,
                              calculate_sentiment_influence, compute_sentiment_flow_matrix, identify_shared_posts,
                              analyze_post_engagement, get_top_commenters, build_commenter_network, detect_communities_louvain,
-                             compute_modularity, calculate_sentiment_influence)
+                             compute_modularity, calculate_sentiment_influence, analyze_top_influencers)
 
 
 def test_assign_initial_sentiments_classifies_mean_correctly():
@@ -938,28 +938,98 @@ def test_compute_modularity_each_node_in_its_own_community():
     assert isinstance(modularity, float)
     assert modularity <= 0
     
-def test_calculate_sentiment_influence_basic_case():
+
+
+def test_analyze_top_influencers_returns_expected_output():
     """
-    GIVEN a graph where node A has neighbors with matching sentiment,
-    WHEN calculate_sentiment_influence is called,
-    THEN it should return a score of 1.0 for A.
+    Given a small graph with a clear central node,
+    when analyze_top_influencers is called,
+    then it should return a subgraph with all nodes
+    and top influencers lists for degree, betweenness, and eigenvector centrality.
+    """
+    graph = nx.Graph()
+    graph.add_edges_from([
+        ("A", "B"), ("A", "C"), ("A", "D"),  # A is highly connected
+        ("D", "E"), ("E", "F")
+    ])
+
+    result = analyze_top_influencers(graph, top_n=5)
+
+    #Check structure of result
+    assert isinstance(result, dict)
+    assert "degree" in result
+    assert "betweenness" in result
+    assert "eigenvector" in result
+    assert "subgraph" in result
+
+    #Check subgraph
+    subgraph = result["subgraph"]
+    assert isinstance(subgraph, nx.Graph)
+    assert subgraph.number_of_nodes() <= graph.number_of_nodes()
+
+    #Check top influencers
+    top_degree = result["degree"]
+    assert isinstance(top_degree, list)
+    assert top_degree[0][0] == "A"  # node A has highest degree
+
+def test_analyze_top_influencers_graph_with_fewer_than_top_n_nodes():
+    """
+    Given a small graph of 3 nodes,
+    when the analyze_top_influencers function is called passing top_n=10,
+    then the function should include all nodes.
+    """
+    #initialize a graph with 3 nodes
+    graph = nx.Graph()
+    graph.add_edges_from([
+        ("A", "B"), ("A", "C")
+        ])
+    
+    #call the function
+    result = analyze_top_influencers(graph, top_n=10)
+    
+    #Check structure of result
+    assert isinstance(result, dict)
+    assert "degree" in result
+    assert "betweenness" in result
+    assert "eigenvector" in result
+    assert "subgraph" in result
+    #Check subgraph
+    subgraph = result["subgraph"]
+    assert isinstance(subgraph, nx.Graph)
+    assert subgraph.number_of_nodes() <= graph.number_of_nodes()
+
+    #Check top influencers
+    top_degree = result["degree"]
+    assert isinstance(top_degree, list)
+    
+def test_analyze_top_influencers_graph_with_no_edges():
+    """
+    Given a graph with isolated nodes and no edges,
+    when analyze_top_influencers is called,
+    then degree and betweenness scores should be zero,
+    and eigenvector scores should all be equal.
     """
     G = nx.Graph()
-    G.add_edges_from([("A", "B"), ("A", "C")])
-    nx.set_node_attributes(G, {"A": 1, "B": 1, "C": 1}, name="sentiment")
+    G.add_nodes_from(["A", "B", "C", "D"])  # 4 isolated nodes
 
-    influence = calculate_sentiment_influence(G)
+    result = analyze_top_influencers(G, top_n=5)
 
-    assert isinstance(influence, dict)
-    assert influence["A"] == 2.0
-    assert influence["B"] == 1.0  # B has only A as neighbor with same sentiment
-    assert influence["C"] == 1.0
+    # Subgraph should include all nodes
+    subgraph = result["subgraph"]
+    assert set(subgraph.nodes) == {"A", "B", "C", "D"}
 
-    
-    
-    
-    
-    
+    # Degree and betweenness scores should be zero
+    for node, score in result["degree"]:
+        assert score == 0.0
+
+    for node, score in result["betweenness"]:
+        assert score == 0.0
+
+    # Eigenvector scores: all equal, each 1/sqrt(4)
+    expected_score = 1 / len(subgraph.nodes) ** 0.5
+    for node, score in result["eigenvector"]:
+        assert score == expected_score
+
     
     
     

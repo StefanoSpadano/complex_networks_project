@@ -1009,23 +1009,23 @@ def test_analyze_top_influencers_graph_with_no_edges():
     then degree and betweenness scores should be zero,
     and eigenvector scores should all be equal.
     """
-    G = nx.Graph()
-    G.add_nodes_from(["A", "B", "C", "D"])  # 4 isolated nodes
+    graph = nx.Graph()
+    graph.add_nodes_from(["A", "B", "C", "D"])  # 4 isolated nodes
 
-    result = analyze_top_influencers(G, top_n=5)
+    result = analyze_top_influencers(graph, top_n=5)
 
-    # Subgraph should include all nodes
+    #Subgraph should include all nodes
     subgraph = result["subgraph"]
     assert set(subgraph.nodes) == {"A", "B", "C", "D"}
 
-    # Degree and betweenness scores should be zero
+    #Degree and betweenness scores should be zero
     for node, score in result["degree"]:
         assert score == 0.0
 
     for node, score in result["betweenness"]:
         assert score == 0.0
 
-    # Eigenvector scores: all equal, each 1/sqrt(4)
+    #Eigenvector scores: all equal, each 1/sqrt(4)
     expected_score = 1 / len(subgraph.nodes) ** 0.5
     for node, score in result["eigenvector"]:
         assert score == expected_score

@@ -146,13 +146,6 @@ def main():
         if not subreddit_name:
             raise ValueError("Subreddit name is required.")
 
-    # Flairs (CLI > config > prompt)
-    default_flairs = config["defaults"].get("flairs", "").split(",")
-    target_flairs = args.flairs or [flair.strip() for flair in default_flairs if flair.strip()]
-    if not target_flairs:
-        flairs_input = input("Enter flairs (comma separated, leave blank for all): ").strip()
-        target_flairs = [f.strip() for f in flairs_input.split(",")] if flairs_input else []
-
     # Generate default filenames based on subreddit
     subreddit_slug = subreddit_name.lower().replace(" ", "_")
     default_posts_file = f"../data/{subreddit_slug}_posts.csv"
@@ -170,23 +163,47 @@ def main():
         subreddit_name=subreddit_name
     )
 
-    # Fetch posts
-    print("Fetching posts...")
-    posts_data = collector.fetch_posts(target_flairs)
+    # Fetch posts (e.g., top 25)
+    print(f"\nFetching posts from r/{subreddit_name}...")
+    posts_data = collector.fetch_posts(target_flairs=[], limit=25)  # Fetch all flairs first
+
+    # Discover unique flairs in fetched posts
+    flairs_in_posts = sorted(set(post['flair'] for post in posts_data if post['flair']))
+    if flairs_in_posts:
+        print("\nFound these flairs in the top 25 posts:")
+        for i, flair in enumerate(flairs_in_posts, 1):
+            print(f"{i}. {flair}")
+        # Prompt user for flairs
+        flairs_input = input("Enter flairs to include (comma separated, or press Enter for all): ").strip()
+        if flairs_input:
+            target_flairs = [f.strip() for f in flairs_input.split(",")]
+        else:
+            target_flairs = flairs_in_posts  # Use all found flairs
+    else:
+        print("No flairs found in the top posts. Fetching all posts.")
+        target_flairs = []  # No flair filtering
+
+    # Filter posts again based on selected flairs
+    if target_flairs:
+        filtered_posts_data = [post for post in posts_data if post['flair'] in target_flairs]
+    else:
+        filtered_posts_data = posts_data
 
     # Fetch comments
     comments_data = []
-    print("Fetching comments for each post...")
-    for post in posts_data:
+    print("\nFetching comments for each post...")
+    for post in filtered_posts_data:
         comments_data.extend(collector.fetch_comments(post['post_id']))
         time.sleep(1)
 
     # Save data
-    print("Saving collected data...")
-    collector.save_to_csv(posts_data, posts_file)
+    print("\nSaving collected data...")
+    collector.save_to_csv(filtered_posts_data, posts_file)
     collector.save_to_csv(comments_data, comments_file)
 
-    print(f"Data collection complete.\nPosts saved to {posts_file}\nComments saved to {comments_file}")
+    print(f"\n✅ Data collection complete.\nPosts saved to {posts_file}\nComments saved to {comments_file}")
+
+
 
 
 if __name__ == "__main__":

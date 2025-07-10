@@ -4,13 +4,15 @@ Created on Wed Nov  6 12:36:11 2024
 
 @author: Raffaele
 """
+# -*- coding: utf-8 -*-
 """
-Reddit Data Collection Script
+Reddit Data Collection Script (Hybrid Config)
 
 This script collects posts and comments from a subreddit using Reddit API (PRAW).
 It uses a hybrid configuration system:
 - Sensitive credentials and defaults stored in config.ini
-- Subreddit, flair, and filenames can be overridden via CLI or interactive prompts
+- Subreddit and filenames are dynamically generated
+- Flairs can be specified interactively or via config/CLI
 """
 
 import praw
@@ -151,9 +153,14 @@ def main():
         flairs_input = input("Enter flairs (comma separated, leave blank for all): ").strip()
         target_flairs = [f.strip() for f in flairs_input.split(",")] if flairs_input else []
 
-    # Output filenames (CLI > config > defaults)
-    posts_file = args.posts_file or config["defaults"].get("posts_output_file", "posts.csv")
-    comments_file = args.comments_file or config["defaults"].get("comments_output_file", "comments.csv")
+    # Generate default filenames based on subreddit
+    subreddit_slug = subreddit_name.lower().replace(" ", "_")
+    default_posts_file = f"../data/{subreddit_slug}_posts.csv"
+    default_comments_file = f"../data/{subreddit_slug}_comments.csv"
+
+    # Output filenames (CLI > config > generated)
+    posts_file = args.posts_file or config["defaults"].get("posts_output_file", default_posts_file)
+    comments_file = args.comments_file or config["defaults"].get("comments_output_file", default_comments_file)
 
     # Initialize collector
     collector = RedditDataCollector(
@@ -184,6 +191,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 

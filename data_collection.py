@@ -4,16 +4,8 @@ Created on Wed Nov  6 12:36:11 2024
 
 @author: Raffaele
 """
-
-
 """
-This script collects posts and comments from a subreddit using Reddit API (PRAW),
-with a hybrid configuration system (config.ini + CLI + interactive prompts).
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Reddit Data Collection Script (Hybrid Config)
+Reddit Data Collection Script
 
 This script collects posts and comments from a subreddit using Reddit API (PRAW).
 It uses a hybrid configuration system:

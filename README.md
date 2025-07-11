@@ -130,11 +130,17 @@ post_output_file = "../path/to/your/post/file.csv"
 
 comment_output_file = "../path/to/yout/comment/file.csv"
 
+If the subreddit and flairs field are left empty then the user will be asked to insert them when launching the data_collection.py file. The user can insert them when having a default subreddit to scrape. The paths are created if they are not already present and named after the subreddit chosen.
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.
 
-- data_collection.py: the script prompts the user for the subreddit to scrape (if it's not already defined in the config.ini file), fetches top posts and dynamically shows the flairs avalaible in those posts and lets you select the flairs to filter the dataset;
+- data_collection.py: can be used with a command line argument specifying subreddit and flairs when launching the script:
+```bash
+python data_collection.py --subreddit OnePiece --flairs Theory,Analysis
+```
+or you can launch it as it is; then if you filled the flairs and subreddit name spaces in the config.ini file then those will be used otherwise they will be asked to the user.
+The script fetches top posts and dynamically shows the flairs avalaible in those posts and lets you select the flairs to filter the dataset.
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;

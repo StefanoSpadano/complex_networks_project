@@ -39,6 +39,42 @@ parser.add_argument("--posts_file", type=str, help="Filename for saving posts da
 parser.add_argument("--comments_file", type=str, help="Filename for saving comments data")
 args = parser.parse_args()
 
+def prompt_user_for_flairs(flairs_in_posts):
+    print("\nFound these flairs in the top 25 posts:")
+    for i, flair in enumerate(flairs_in_posts, 1):
+        print(f"{i}. {flair}")
+
+    flairs_input = input(
+        "\nEnter flairs to include (e.g., 1,3 or type names, press Enter for all): "
+    ).strip()
+
+    if not flairs_input:
+        return flairs_in_posts  # All flairs
+
+    selected_flairs = []
+    inputs = [item.strip() for item in flairs_input.split(",")]
+
+    for item in inputs:
+        if item.isdigit():
+            idx = int(item) - 1
+            if 0 <= idx < len(flairs_in_posts):
+                selected_flairs.append(flairs_in_posts[idx])
+            else:
+                print(f"⚠️ Warning: {item} is not a valid flair number.")
+        else:
+            matched_flair = next(
+                (f for f in flairs_in_posts if f.lower() == item.lower()), None
+            )
+            if matched_flair:
+                selected_flairs.append(matched_flair)
+            else:
+                print(f"⚠️ Warning: Flair '{item}' not found in list.")
+
+    if not selected_flairs:
+        print("⚠️ No valid flairs selected. Fetching all flairs instead.")
+        return flairs_in_posts
+    return selected_flairs
+
 
 class RedditDataCollector:
     """
@@ -163,25 +199,29 @@ def main():
         subreddit_name=subreddit_name
     )
 
-    # Fetch posts (e.g., top 25)
-    print(f"\nFetching posts from r/{subreddit_name}...")
-    posts_data = collector.fetch_posts(target_flairs=[], limit=25)  # Fetch all flairs first
+# Flair logic (CLI > config > prompt)
+    default_flairs = config["defaults"].get("flairs", "").split(",")
+    target_flairs = (
+        [f.strip() for f in args.flairs.split(",")] if args.flairs else
+        [f.strip() for f in default_flairs if f.strip()]
+    )
 
-    # Discover unique flairs in fetched posts
-    flairs_in_posts = sorted(set(post['flair'] for post in posts_data if post['flair']))
-    if flairs_in_posts:
-        print("\nFound these flairs in the top 25 posts:")
-        for i, flair in enumerate(flairs_in_posts, 1):
-            print(f"{i}. {flair}")
-        # Prompt user for flairs
-        flairs_input = input("Enter flairs to include (comma separated, or press Enter for all): ").strip()
-        if flairs_input:
-            target_flairs = [f.strip() for f in flairs_input.split(",")]
-        else:
-            target_flairs = flairs_in_posts  # Use all found flairs
+    if target_flairs:
+        print(f"✅ Using pre-configured flairs: {', '.join(target_flairs)}")
+        # Fetch posts with pre-configured flairs
+        posts_data = collector.fetch_posts(target_flairs=target_flairs, limit=25)
     else:
-        print("No flairs found in the top posts. Fetching all posts.")
-        target_flairs = []  # No flair filtering
+        # Fetch posts first (to discover flairs dynamically)
+        print(f"\nFetching posts from r/{subreddit_name}...")
+        posts_data = collector.fetch_posts(target_flairs=[], limit=25)
+
+        # Discover unique flairs and prompt user
+        flairs_in_posts = sorted(set(post['flair'] for post in posts_data if post['flair']))
+        if flairs_in_posts:
+            target_flairs = prompt_user_for_flairs(flairs_in_posts)
+        else:
+            print("⚠️ No flairs found in the top posts. Fetching all posts.")
+            target_flairs = []  # No flair filtering
 
     # Filter posts again based on selected flairs
     if target_flairs:

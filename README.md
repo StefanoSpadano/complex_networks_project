@@ -113,7 +113,7 @@ To configure the project, copy the provided sample_config.ini file to config.ini
 cp sample_config.ini config.ini
 ```
 
-This will create a new file called config.ini pre-filled with placeholder values Open it in a text editor and replace the placeholders with your Reddit API credentials.
+This will create a new file called config.ini pre-filled with placeholder values. Open it in a text editor and replace the placeholders with your Reddit API credentials.
 
 ## config.ini
 client_id = "your-client-id"

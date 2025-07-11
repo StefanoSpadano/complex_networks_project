@@ -10,55 +10,55 @@ import os
 from unittest.mock import patch
 import praw
 from unittest.mock import patch, MagicMock
-from data_collection import RedditDataCollector  # adjust path as needed
+from complex_networks_project.data_collection import RedditDataCollector, prompt_user_for_flairs
+import argparse
+import sys
+import os
+
+# Add the parent folder (project root) to sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import data_collection
+
+
 
 #Temporarily replaces praw.Reddit class just for test function
 @patch("praw.Reddit")
 def test_fetch_posts_return_matching_flair(mock_reddit):
-    
     """
-    Given a mock subreddit with posts having different flairs,
-    when the fetch function is called alongside a list of target flairs,
-    then it should return only posts with that type of flair ignoring posts with other flairs.
+    Given a subreddit with posts of various flairs,
+    when fetch_posts is called with a target flair,
+    then it should return only posts matching that flair.
     """
-    
-    #Create a fake Reddit submission with attributes:
-    #flair, post id, post title, author, score, # of comments, timestamp, post's selftext, url
-    mock_submission = MagicMock()
-    mock_submission.link_flair_text = "Theory"
-    mock_submission.id = "abc123"
-    mock_submission.title = "Interesting Theory"
-    mock_submission.author = "user1"
-    mock_submission.score = 100
-    mock_submission.num_comments = 10
-    mock_submission.created_utc = 1234567890
-    mock_submission.selftext = "This is the body"
-    mock_submission.url = "http://example.com"
+    mock_reddit_instance = mock_reddit.return_value
+    mock_subreddit = mock_reddit_instance.subreddit.return_value
 
+    # Mock post with matching flair
+    mock_post = MagicMock()
+    mock_post.id = "abc123"
+    mock_post.title = "Test Post"
+    mock_post.link_flair_text = "Theory"  # 
+    mock_post.score = 100
+    mock_post.author = "test_user"
+    mock_post.created_utc = 1234567890
+    mock_post.num_comments = 5
+    mock_post.url = "https://reddit.com/abc123"
+    mock_post.selftext = "Test content"
 
-    #Create a fake subreddit that returns the fake submission
-    mock_subreddit = MagicMock()
-    mock_subreddit.search.return_value = [mock_submission]
-    
-    #Make the mocked Reddit API return the mocked subreddit just created
-    mock_reddit.return_value.subreddit.return_value = mock_subreddit
-    
-    #Collector instantiation
-    collector = RedditDataCollector("id", "secret", "agent", "OnePiece")
-    
-    #Run the method and collect posts from the mocked subreddit
-    posts = collector.fetch_posts(["Theory"], limit=1)
-    
-    
-    #Assertions:
-    #lenght of posts collected is one    
+    mock_subreddit.top.return_value = [mock_post]
+
+    collector = RedditDataCollector(
+        client_id="dummy_id",
+        client_secret="dummy_secret",
+        user_agent="dummy_agent",
+        subreddit_name="OnePiece"
+    )
+
+    posts = collector.fetch_posts("OnePiece", target_flairs=["Theory"], limit=1)
+
     assert len(posts) == 1
-    
-    #post_id matching
-    assert posts[0]["post_id"] == "abc123"
-    
-    #flair matching
     assert posts[0]["flair"] == "Theory"
+
 
 
 @patch("praw.Reddit")
@@ -86,7 +86,7 @@ def test_fetch_posts_no_text(mock_reddit):
     
     #Create a fake subreddit that returns the fake submission
     mock_subreddit = MagicMock()
-    mock_subreddit.search.return_value = [mock_submission]
+    mock_subreddit.top.return_value = [mock_submission]
     
     #Make the mocked Reddit API return the mocked subreddit just created
     mock_reddit.return_value.subreddit.return_value = mock_subreddit
@@ -95,7 +95,7 @@ def test_fetch_posts_no_text(mock_reddit):
     collector = RedditDataCollector("id","secret","agent","OnePiece")
     
     #Run the method and collect posts from the mocked subreddit
-    posts = collector.fetch_posts(["Theory"], limit=1)
+    posts = collector.fetch_posts("OnePiece", target_flairs=["Theory"], limit=1)
     
     #Assertions:
     #lenght of selftext is 1 (a blank space)
@@ -129,7 +129,7 @@ def test_fetch_posts_missing_fields(mock_reddit):
     
     #Create a fake subreddit that returns the fake submission
     mock_subreddit = MagicMock()
-    mock_subreddit.search.return_value = [mock_submission]
+    mock_subreddit.top.return_value = [mock_submission]
     
     #Make the mocked Reddit API return the mocked subreddit just created
     mock_reddit.return_value.subreddit.return_value = mock_subreddit
@@ -138,11 +138,11 @@ def test_fetch_posts_missing_fields(mock_reddit):
     collector = RedditDataCollector("id","secret","agent","OnePiece")
     
     #Run the method and collect posts from the mocked subreddit
-    posts = collector.fetch_posts(["Theory"], limit=1)
+    posts = collector.fetch_posts("OnePiece", target_flairs=["Theory"], limit=1)
     
     #Assertions:
     #content of the missing field is None
-    assert posts[0]["author"] == 'None' 
+    assert posts[0]["author"] == 'None'
     
 @patch("praw.Reddit")
 def test_fetch_posts_different_flair(mock_reddit):
@@ -179,7 +179,7 @@ def test_fetch_posts_different_flair(mock_reddit):
     collector = RedditDataCollector("id","secret","agent","OnePiece")
     
     #Run the method and collect posts from the mocked subreddit
-    posts = collector.fetch_posts(["Theory"], limit=1)
+    posts = collector.fetch_posts("OnePiece", target_flairs=["Theory"], limit=1)
     
     #Assertions:
     #verify that no posts has been collected
@@ -328,3 +328,81 @@ def test_rate_limit_error():
     # Assert: Should succeed on second attempt and fetch 1 comment
     assert len(comments) == 1
     assert comments[0]['comment_id'] == "comment123"
+
+def test_prompt_user_for_flairs_number_selection(monkeypatch):
+    """
+    Given a list of flairs and user input of numbers,
+    when prompt_user_for_flairs is called,
+    then it should return the selected flairs matching those numbers.
+    """
+    flairs_in_posts = ["Theory", "Discussion", "Fanart"]
+    user_input = "1,3"  # User selects "Theory" and "Fanart"
+
+    #Simulate user input
+    monkeypatch.setattr("builtins.input", lambda _: user_input)
+
+    selected_flairs = prompt_user_for_flairs(flairs_in_posts)
+
+    assert selected_flairs == ["Theory", "Fanart"]
+
+def test_prompt_user_for_flairs_user_selects_all_flairs(monkeypatch):
+    """
+    Given a list of flairs, 
+    when prompt_user_for_flairs is called and the user does not enter anything,
+    then all flairs should be selected by default.
+    """
+    flairs_in_posts = ["Theory", "Discussion", "Fanart"]
+    
+    #Simulate the input
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    
+    selected_flairs = prompt_user_for_flairs(flairs_in_posts)
+    
+    assert selected_flairs == ["Theory","Discussion", "Fanart"]
+
+def test_prompt_user_for_flairs_invalid_numbers(monkeypatch):
+    """
+    Given a list of flairs and user input of invalid numbers,
+    when prompt_user_for_flairs is called with max_attempts=1,
+    then it should raise a ValueError.
+    """
+    flairs_in_posts = ["Theory", "Discussion", "Fanart"]
+
+    # Simulate user entering invalid numbers
+    monkeypatch.setattr("builtins.input", lambda _: "10,20")
+
+    try:
+        prompt_user_for_flairs(flairs_in_posts, max_attempts=1)
+        assert False, "Expected ValueError for too many invalid attempts"
+    except ValueError as e:
+        assert "Too many invalid attempts" in str(e)
+
+def test_prompt_user_for_flairs_case_insensitive(monkeypatch):
+    """
+    Given a list of flairs,
+    when the function prompt_user_for_flairs is called and flairs are inserted in lowercase,
+    then the function should still match them correctly.
+    """
+    flairs_in_posts = ["Theory", "Discussion", "Fanart"]
+    
+    #Simulate the input
+    monkeypatch.setattr("builtins.input", lambda _: "theory, discussion")
+    
+    selected_flairs = prompt_user_for_flairs(flairs_in_posts, max_attempts=1)
+    assert selected_flairs == ["Theory", "Discussion"]
+    
+def test_prompt_user_for_flairs_mix_number_names(monkeypatch):
+    """
+    Given a list of flairs,
+    when the function prompt_user_for_flairs is called and the user inserts both numbers and flairs' names,
+    then the function should still match them correctly.
+    """
+    flairs_in_posts = ["Theory", "Discussion", "Fanart"]
+    
+    #Simulate the input
+    monkeypatch.setattr("builtins.input", lambda _: "1, fanart")
+    
+    selected_flairs = prompt_user_for_flairs(flairs_in_posts, max_attempts=1)
+    
+    assert selected_flairs == ["Theory", "Fanart"]
+

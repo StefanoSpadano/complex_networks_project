@@ -122,6 +122,15 @@ client_secret = "your-client-secret"
 
 user_agent = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
 
+subreddit = "the name of the subreddit you'd like to scrape"
+
+flairs = "flairs you are interested in"
+
+post_output_file = "../path/to/your/post/file.csv"
+
+comment_output_file = "../path/to/yout/comment/file.csv"
+
+
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.
 

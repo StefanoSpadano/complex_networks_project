@@ -31,49 +31,47 @@ warnings.filterwarnings("ignore", message="It appears that you are using PRAW in
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-# CLI argument parser
-parser = argparse.ArgumentParser(description="Reddit Data Collector")
-parser.add_argument("--subreddit", type=str, help="Subreddit to scrape")
-parser.add_argument("--flairs", type=str, nargs='+', help="List of flairs to filter by")
-parser.add_argument("--posts_file", type=str, help="Filename for saving posts data")
-parser.add_argument("--comments_file", type=str, help="Filename for saving comments data")
-args = parser.parse_args()
+# Define args = None so it exists globally
 
-def prompt_user_for_flairs(flairs_in_posts):
-    print("\nFound these flairs in the top 25 posts:")
-    for i, flair in enumerate(flairs_in_posts, 1):
-        print(f"{i}. {flair}")
+args = None
 
-    flairs_input = input(
-        "\nEnter flairs to include (e.g., 1,3 or type names, press Enter for all): "
-    ).strip()
+def prompt_user_for_flairs(flairs_in_posts, max_attempts=None):
+    """
+    Prompts user to select flairs by number or name.
+    Keeps prompting until valid input is provided or max_attempts is reached.
+    """
+    attempts = 0
+    while True:
+        flairs_input = input("Enter flairs to include (comma separated, or press Enter for all): ").strip()
 
-    if not flairs_input:
-        return flairs_in_posts  # All flairs
+        if not flairs_input:
+            return flairs_in_posts  # ✅ All flairs by default
 
-    selected_flairs = []
-    inputs = [item.strip() for item in flairs_input.split(",")]
-
-    for item in inputs:
-        if item.isdigit():
-            idx = int(item) - 1
-            if 0 <= idx < len(flairs_in_posts):
-                selected_flairs.append(flairs_in_posts[idx])
+        selected_flairs = []
+        for entry in flairs_input.split(","):
+            entry = entry.strip()
+            if entry.isdigit():
+                index = int(entry) - 1
+                if 0 <= index < len(flairs_in_posts):
+                    selected_flairs.append(flairs_in_posts[index])
+                else:
+                    print(f"⚠️ Warning: {entry} is not a valid flair number.")
             else:
-                print(f"⚠️ Warning: {item} is not a valid flair number.")
-        else:
-            matched_flair = next(
-                (f for f in flairs_in_posts if f.lower() == item.lower()), None
-            )
-            if matched_flair:
-                selected_flairs.append(matched_flair)
-            else:
-                print(f"⚠️ Warning: Flair '{item}' not found in list.")
+                matched_flair = next((f for f in flairs_in_posts if f.lower() == entry.lower()), None)
+                if matched_flair:
+                    selected_flairs.append(matched_flair)
+                else:
+                    print(f"⚠️ Warning: '{entry}' is not a valid flair name.")
 
-    if not selected_flairs:
-        print("⚠️ No valid flairs selected. Fetching all flairs instead.")
-        return flairs_in_posts
-    return selected_flairs
+        if selected_flairs:
+            return selected_flairs  # ✅ Valid selection
+
+        print("⚠️ No valid flairs selected. Please try again.\n")
+        attempts += 1
+        if max_attempts is not None and attempts >= max_attempts:
+            raise ValueError("❌ Too many invalid attempts. Exiting.")
+
+
 
 
 class RedditDataCollector:
@@ -108,24 +106,40 @@ class RedditDataCollector:
         )
         self.subreddit = self.reddit.subreddit(subreddit_name)
 
-    def fetch_posts(self, target_flairs, limit=100):
-        """Fetch posts from the subreddit filtered by flair."""
+    def fetch_posts(self, subreddit, target_flairs=None, limit=25):
+        """
+    Fetch posts from a subreddit, optionally filtering by flairs.
+
+    Args:
+        subreddit (str): Subreddit name
+        target_flairs (list): List of flairs to filter by
+        limit (int): Number of posts to fetch (default 25)
+
+    Returns:
+        list of dicts: Each dict represents a post
+    """
+        target_flairs = target_flairs or []
+        subreddit_ref = self.reddit.subreddit(subreddit)
+        posts = subreddit_ref.top(limit=limit)
         posts_data = []
-        for submission in self.subreddit.hot(limit=limit):
-            if target_flairs and submission.link_flair_text not in target_flairs:
-                continue  # Skip posts without desired flair
+
+        for post in posts:
+            if target_flairs and post.link_flair_text not in target_flairs:
+                continue  # Skip posts without desired flairs
             posts_data.append({
-                'post_id': submission.id,
-                'title': submission.title,
-                'author': str(submission.author),
-                'score': submission.score,
-                'num_comments': submission.num_comments,
-                'created_utc': submission.created_utc,
-                'selftext': submission.selftext,
-                'url': submission.url,
-                'flair': submission.link_flair_text
-            })
+                "post_id": post.id,
+                "title": post.title,
+                "flair": post.link_flair_text,
+                "score": post.score,
+                "author": str(post.author),
+                "created_utc": post.created_utc,
+                "num_comments": post.num_comments,
+                "url": post.url,
+                "selftext": post.selftext
+        })
+
         return posts_data
+
 
     def fetch_comments(self, post_id):
         """Fetch comments for a given post ID."""
@@ -209,25 +223,34 @@ def main():
     if target_flairs:
         print(f"✅ Using pre-configured flairs: {', '.join(target_flairs)}")
         # Fetch posts with pre-configured flairs
-        posts_data = collector.fetch_posts(target_flairs=target_flairs, limit=25)
+        posts_data = collector.fetch_posts(
+            subreddit_name, target_flairs=target_flairs, limit=25
+        )
     else:
         # Fetch posts first (to discover flairs dynamically)
         print(f"\nFetching posts from r/{subreddit_name}...")
-        posts_data = collector.fetch_posts(target_flairs=[], limit=25)
-
+        posts_data = collector.fetch_posts(
+            subreddit_name, target_flairs=[], limit=25
+        )
+    
         # Discover unique flairs and prompt user
-        flairs_in_posts = sorted(set(post['flair'] for post in posts_data if post['flair']))
+        flairs_in_posts = sorted(
+            set(post['flair'] for post in posts_data if post['flair'])
+        )
         if flairs_in_posts:
             target_flairs = prompt_user_for_flairs(flairs_in_posts)
         else:
             print("⚠️ No flairs found in the top posts. Fetching all posts.")
             target_flairs = []  # No flair filtering
-
+    
     # Filter posts again based on selected flairs
     if target_flairs:
-        filtered_posts_data = [post for post in posts_data if post['flair'] in target_flairs]
+        filtered_posts_data = [
+            post for post in posts_data if post['flair'] in target_flairs
+        ]
     else:
         filtered_posts_data = posts_data
+
 
     # Fetch comments
     comments_data = []
@@ -247,6 +270,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # CLI argument parser
+    parser = argparse.ArgumentParser(description="Reddit Data Collector")
+    parser.add_argument("--subreddit", type=str, help="Subreddit to scrape")
+    parser.add_argument("--flairs", type=str, nargs='+', help="List of flairs to filter by")
+    parser.add_argument("--posts_file", type=str, help="Filename for saving posts data")
+    parser.add_argument("--comments_file", type=str, help="Filename for saving comments data")
+    args = parser.parse_args()
     main()
 
 

@@ -130,7 +130,7 @@ post_output_file = "../path/to/your/post/file.csv"
 
 comment_output_file = "../path/to/yout/comment/file.csv"
 
-If the subreddit and flairs field are left empty then the user will be asked to insert them when launching the data_collection.py file. The user can insert them when having a default subreddit to scrape. The paths are created if they are not already present and named after the subreddit chosen.
+If the subreddit and flairs fields are left empty then the user will be asked to insert them when launching the data_collection.py file. The user can insert them when having a default subreddit to scrape. The paths are created if they are not already present and named after the subreddit chosen.
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.

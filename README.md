@@ -107,18 +107,25 @@ After submitting these spaces you will get access to:
 - Client secret (a long alphanumeric string).
 
 
-A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved into it in the following way:
-## config.py
-REDDIT_CLIENT_ID = "your-client-id"
+To configure the project, copy the provided sample_config.ini file to config.ini, make sure you are in the root folder of the cloned repository (the one containing sample_config.ini) before running:
 
-REDDIT_CLIENT_SECRET = "your-client-secret"
+```bash
+cp sample_config.ini config.ini
+```
 
-REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
+This will create a new file called config.ini pre-filled with placeholder values Open it in a text editor and replace the placeholders with your Reddit API credentials.
+
+## config.ini
+client_id = "your-client-id"
+
+client_secret = "your-client-secret"
+
+user_agent = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.
 
-- data_collection.py: collects posts and comments from the subreddit saving them in a folder called data;
+- data_collection.py: the script prompts the user for the subreddit to scrape (if it's not already defined in the config.ini file), fetches top posts and dynamically shows the flairs avalaible in those posts and lets you select the flairs to filter the dataset;
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;
@@ -143,12 +150,25 @@ python network_aspects.py
 ```bash
 python data_collection.py
 
-It appears that you are using PRAW in an asynchronous environment.
-It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
-See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+Fetching posts from r/OnePiece...
+
+Found these flairs in the top 25 posts:
+1. Analysis
+2. Cosplay
+3. Current Chapter
+4. Discussion
+5. Fanart
+6. Media
+
+Enter flairs to include (e.g., 1,3 or type names, press Enter for all): 1, 3, 4
+
+Fetching comments for each post...
 
 Saving collected data...
-Data collection complete. Posts and comments have been saved.
+
+✅ Data collection complete.
+Posts saved to ../data/onepiece_posts.csv
+Comments saved to ../data/onepiece_comments.csv
 ```
 
 2. analize_metrics.py

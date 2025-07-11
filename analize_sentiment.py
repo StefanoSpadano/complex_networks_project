@@ -16,32 +16,7 @@ from utils import save_plot, categorize_sentiment, load_data
 
 
 
-# =============================================================================
-# def load_data(path):
-#     try:
-#         return pd.read_csv(path)
-#     except Exception:
-#         return pd.read_csv(path, lineterminator='\n', engine='python')
-# =============================================================================
 
-# =============================================================================
-# def load_data(posts_path, post_metrics_path):
-#     """
-#     Load posts and post metrics data from CSV files.
-# 
-#     Args:
-#         posts_path (str): Path to the posts CSV file.
-#         post_metrics_path (str): Path to the post metrics CSV file.
-# 
-#     Returns:
-#         tuple: A tuple containing two DataFrames (posts_df, post_metrics).
-#     """
-#     posts_df = pd.read_csv(posts_path)
-#     post_metrics = pd.read_csv(post_metrics_path)
-#     return posts_df, post_metrics
-# 
-# 
-# =============================================================================
 def calculate_sentiment(text, analyzer):
     """
     Calculate the sentiment score for a given text.
@@ -104,26 +79,6 @@ def plot_sentiment_distribution(sentiment_posts_cleaned):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     save_plot("Distribution of sentiment scores", "plots/analize_sentiment_plots")
     plt.show()
-
-
-# =============================================================================
-# def categorize_sentiment(score):
-#     """
-#     Categorize a sentiment score into 'Negative', 'Neutral', or 'Positive'.
-# 
-#     Args:
-#         score (float): The sentiment score.
-# 
-#     Returns:
-#         str: The sentiment category.
-#     """
-#     if score < -0.1:
-#         return 'Negative'
-#     elif score > 0.1:
-#         return 'Positive'
-#     else:
-#         return 'Neutral'
-# =============================================================================
 
 
 def add_sentiment_category(sentiment_posts_cleaned):

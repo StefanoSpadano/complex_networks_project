@@ -18,30 +18,6 @@ from utils import save_plot, categorize_sentiment, load_data
 
 
 
-# =============================================================================
-# def load_data(path):
-#     try:
-#         return pd.read_csv(path)
-#     except Exception:
-#         return pd.read_csv(path, lineterminator='\n', engine='python')
-# =============================================================================
-
-# =============================================================================
-# def load_comments_data(comments_path):
-#     """
-#     Load comments data from a CSV file.
-# 
-#     Args:
-#         comments_path (str): Path to the comments CSV file.
-# 
-#     Returns:
-#         pd.DataFrame: DataFrame containing comments data.
-#     """
-#     comments_df = pd.read_csv(comments_path)
-#     return comments_df
-# 
-# =============================================================================
-
 def filter_comments(comments_df):
     """
     Filter comments to remove deleted authors, empty bodies, and low engagement scores.
@@ -109,25 +85,6 @@ def plot_sentiment_distribution(filtered_comments):
     save_plot("Kernel Density Estimate of Sentiment Scores","plots/analize_comment_sentiment_plots")
     plt.show()
 
-
-# =============================================================================
-# def categorize_sentiment(sentiment_score):
-#     """
-#     Categorize a sentiment score into 'Positive', 'Neutral', or 'Negative'.
-# 
-#     Args:
-#         sentiment_score (float): The sentiment score.
-# 
-#     Returns:
-#         str: The sentiment category.
-#     """
-#     if sentiment_score > 0:
-#         return 'Positive'
-#     elif sentiment_score < 0:
-#         return 'Negative'
-#     else:
-#         return 'Neutral'
-# =============================================================================
 
 
 def add_sentiment_category(filtered_comments):
@@ -330,27 +287,6 @@ def analyze_top_comments(filtered_comments, N=100):
     fig.tight_layout()
     fig.savefig("plots/analize_comment_sentiment_plots/KDE Heatmap - Length vs Sentiment.png")
     plt.close(fig)
-
-
-# =============================================================================
-#     # KDE heatmap
-#     plt.figure(figsize=(10, 6))
-#     sns.kdeplot(
-#         x=top_summary['length'],
-#         y=top_summary['sentiment_body'],
-#         cmap='Blues',
-#         fill=True
-#     )
-#     plt.title('KDE Heatmap: Length vs. Sentiment')
-#     plt.xlabel('Length of Comment')
-#     plt.ylabel('Sentiment (Compound Score)')
-#     plt.grid()
-#     #plt.tight_layout()  # <-- Important in order to save correctly the plot in the folder as with sns works differently
-#     save_plot("KDE Heatmap: Length vs. Sentiment","plots/analize_comment_sentiment_plots")
-#     plt.savefig("debug_kde.png")
-#     plt.show()
-# 
-# =============================================================================
 
 
 def save_filtered_comments(filtered_comments, output_path):

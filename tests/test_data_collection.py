@@ -277,7 +277,7 @@ def test_empty_data_when_saving_to_csv(tmp_path):
     """
     Given an empty data list
     when calling save_to_csv
-    then it should create a CSV file with headers only and no data rows
+    then it should create a CSV file with headers only and no data rows.
     """
     # Arrange: Define empty data and file path
     empty_data = []
@@ -299,7 +299,7 @@ def test_rate_limit_error():
     """
     Given a Reddit submission that raises a rate limit error initially
     when calling fetch_comments
-    then the function should retry and eventually return the comment data
+    then the function should retry and eventually return the comment data.
     """
     # Arrange
     collector = RedditDataCollector("id", "secret", "agent", "subreddit")

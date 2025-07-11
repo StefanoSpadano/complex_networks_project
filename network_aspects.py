@@ -698,14 +698,14 @@ def get_top_commenters(filtered_comments, top_k=20):
 
 def build_commenter_network(filtered_comments, top_commenters):
     """
-    Build an undirected network connecting top commenters who commented on the same post.
+    Build an undirected weighted network connecting top commenters who commented on the same post.
     
     Args:
         filtered_comments (pd.DataFrame): DataFrame of comments
         top_commenters (list): List of usernames to include
     
     Returns:
-        nx.Graph: Undirected network of commenters
+        nx.Graph: Undirected network of commenters with edge weights as shared post counts
     """
     network = nx.Graph()
     network.add_nodes_from(top_commenters)
@@ -715,9 +715,14 @@ def build_commenter_network(filtered_comments, top_commenters):
         commenters = top_df[top_df['post_id'] == post_id]['author'].tolist()
         for i in range(len(commenters)):
             for j in range(i + 1, len(commenters)):
-                network.add_edge(commenters[i], commenters[j])
+                u, v = commenters[i], commenters[j]
+                if network.has_edge(u, v):
+                    network[u][v]["weight"] += 1
+                else:
+                    network.add_edge(u, v, weight=1)
     
     return network
+
 
 def visualize_largest_cluster(graph, title="Mini Cluster of Commenters"):
     """

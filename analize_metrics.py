@@ -5,6 +5,9 @@ Created on Wed Nov  6 18:24:17 2024
 @author: Raffaele
 """
 
+import configparser
+import argparse
+import os
 import pandas as pd
 from utils import load_data
 
@@ -129,14 +132,40 @@ def save_metrics(post_metrics, comment_metrics, post_metrics_path, comment_metri
 
 
 def main():
-    # Paths to data files
-    posts_path = "../data/onepiece_posts.csv"
-    comments_path = "../data/onepiece_comments.csv"
-    post_metrics_path = "../data/post_metrics.csv"
-    comment_metrics_path = "../data/comment_metrics.csv"
+    # Load config and CLI arguments
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+
+    parser = argparse.ArgumentParser(description="Analyze subreddit metrics")
+    parser.add_argument("--subreddit", type=str, help="Subreddit to analyze")
+    parser.add_argument("--posts_file", type=str, help="Path to posts CSV")
+    parser.add_argument("--comments_file", type=str, help="Path to comments CSV")
+    parser.add_argument("--post_metrics_file", type=str, help="Path to save post metrics CSV")
+    parser.add_argument("--comment_metrics_file", type=str, help="Path to save comment metrics CSV")
+    args = parser.parse_args()
+
+    # Determine subreddit slug
+    subreddit_name = args.subreddit or config["defaults"].get("subreddit")
+    if not subreddit_name:
+        raise ValueError("Subreddit name not specified. Use --subreddit or set in config.ini.")
+    subreddit_slug = subreddit_name.lower().replace(" ", "_")
+
+    # 🔥 Resolve file paths (CLI > config.ini > defaults)
+    posts_path = args.posts_file or config["defaults"].get(
+        "posts_output_file", f"../data/{subreddit_slug}_posts.csv"
+    )
+    comments_path = args.comments_file or config["defaults"].get(
+        "comments_output_file", f"../data/{subreddit_slug}_comments.csv"
+    )
+    post_metrics_path = args.post_metrics_file or f"../data/{subreddit_slug}_post_metrics.csv"
+    comment_metrics_path = args.comment_metrics_file or f"../data/{subreddit_slug}_comment_metrics.csv"
+
+    # Debugging: Show resolved paths
+    print(f"📄 Using posts file: {posts_path}")
+    print(f"📄 Using comments file: {comments_path}")
 
     # Load data
-    posts_df  = load_data(posts_path)
+    posts_df = load_data(posts_path)
     comments_df = load_data(comments_path)
 
     # Preprocess data

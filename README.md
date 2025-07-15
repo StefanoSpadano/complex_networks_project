@@ -1,8 +1,6 @@
-# One Piece subreddit network analysis
+# A subreddit network analysis
 
-A network and sentiment analysis project based on user interactions in the r/OnePiece subreddit.
-
-![Buggy](images/buggy.jpg)
+A network and sentiment analysis project based on user interactions in a given subreddit.
 
 ## Description
 This project aims at studying the network dynamics of a subreddit online. The subreddit chosen from the start was the the OnePiece subreddit but later on the project was extended to ask the user to prompt the subreddit to analyze. In order to study user engagement, user sentiments and network dynamics some python libraries have been used such as PRAW, Pandas, VADER Sentiment Analysis and Networkx. 

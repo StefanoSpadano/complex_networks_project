@@ -6,7 +6,7 @@ Created on Wed Nov  6 12:36:11 2024
 """
 # -*- coding: utf-8 -*-
 """
-Reddit Data Collection Script (Hybrid Config)
+Reddit Data Collection Script
 
 This script collects posts and comments from a subreddit using Reddit API (PRAW).
 It uses a hybrid configuration system:
@@ -24,14 +24,14 @@ import warnings
 import configparser
 import argparse
 
-# Suppress PRAW async warnings
+#Suppress PRAW async warnings
 warnings.filterwarnings("ignore", message="It appears that you are using PRAW in an asynchronous environment.")
 
-# Load config.ini
+#Load config.ini
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-# Define args = None so it exists globally
+#Define args = None so it exists globally
 
 args = None
 
@@ -45,7 +45,7 @@ def prompt_user_for_flairs(flairs_in_posts, max_attempts=None):
         flairs_input = input("Enter flairs to include (comma separated, or press Enter for all): ").strip()
 
         if not flairs_input:
-            return flairs_in_posts  # ✅ All flairs by default
+            return flairs_in_posts  #All flairs by default
 
         selected_flairs = []
         for entry in flairs_input.split(","):
@@ -55,21 +55,21 @@ def prompt_user_for_flairs(flairs_in_posts, max_attempts=None):
                 if 0 <= index < len(flairs_in_posts):
                     selected_flairs.append(flairs_in_posts[index])
                 else:
-                    print(f"⚠️ Warning: {entry} is not a valid flair number.")
+                    print(f" Warning: {entry} is not a valid flair number.")
             else:
                 matched_flair = next((f for f in flairs_in_posts if f.lower() == entry.lower()), None)
                 if matched_flair:
                     selected_flairs.append(matched_flair)
                 else:
-                    print(f"⚠️ Warning: '{entry}' is not a valid flair name.")
+                    print(f" Warning: '{entry}' is not a valid flair name.")
 
         if selected_flairs:
-            return selected_flairs  # ✅ Valid selection
+            return selected_flairs  #Valid selection
 
-        print("⚠️ No valid flairs selected. Please try again.\n")
+        print(" No valid flairs selected. Please try again.\n")
         attempts += 1
         if max_attempts is not None and attempts >= max_attempts:
-            raise ValueError("❌ Too many invalid attempts. Exiting.")
+            raise ValueError(" Too many invalid attempts. Exiting.")
 
 
 
@@ -149,8 +149,8 @@ class RedditDataCollector:
 
         while attempt < 5:
             try:
-                submission.comments.replace_more(limit=None)
-                for comment in submission.comments.list():
+                submission.comments.replace_more(limit=0)
+                for comment in submission.comments.list()[:50]:
                     comments_data.append({
                         'comment_id': comment.id,
                         'post_id': post_id,
@@ -175,37 +175,66 @@ class RedditDataCollector:
 
         return comments_data
 
-    @staticmethod
-    def save_to_csv(data, file_path):
-        """Save data to a CSV file."""
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    def save_to_csv(self, data, filename):
+        """Save a list of dictionaries to a CSV file."""
+        
+        import os
+        #Ensure the folder exists
+        folder = os.path.dirname(filename)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+            print(f"Created folder: {folder}")
+    
         df = pd.DataFrame(data)
-        df.to_csv(file_path, index=False)
+        df.to_csv(filename, index=False)
+        print(f"Saved data to {filename}")
 
 
 def main():
-    # Load credentials
+    #Load credentials
     client_id = config["reddit"]["client_id"]
     client_secret = config["reddit"]["client_secret"]
     user_agent = config["reddit"]["user_agent"]
 
-    # Subreddit (CLI > config > prompt)
+    #Subreddit (CLI > config > prompt)
     subreddit_name = args.subreddit or config["defaults"].get("subreddit")
     if not subreddit_name:
         subreddit_name = input("Enter subreddit to scrape: ").strip()
         if not subreddit_name:
             raise ValueError("Subreddit name is required.")
+    
+        #Flair logic (CLI > config > prompt)
+    default_flairs = config["defaults"].get("flairs", "").split(",")
+    target_flairs = (
+        [f.strip() for f in args.flairs.split(",")] if args.flairs else
+        [f.strip() for f in default_flairs if f.strip()]
+    )
 
-    # Generate default filenames based on subreddit
+    
+    #Generate default filenames based on subreddit
     subreddit_slug = subreddit_name.lower().replace(" ", "_")
     default_posts_file = f"../data/{subreddit_slug}_posts.csv"
     default_comments_file = f"../data/{subreddit_slug}_comments.csv"
 
-    # Output filenames (CLI > config > generated)
-    posts_file = args.posts_file or config["defaults"].get("posts_output_file", default_posts_file)
-    comments_file = args.comments_file or config["defaults"].get("comments_output_file", default_comments_file)
+        #Build dynamic filename if config is blank
+    if config["defaults"].get("posts_output_file"):
+        posts_file = config["defaults"]["posts_output_file"]
+    else:
+        posts_file = f"../data/{subreddit_slug}_posts.csv"
+    
+    if config["defaults"].get("comments_output_file"):
+        comments_file = config["defaults"]["comments_output_file"]
+    else:
+        comments_file = f"../data/{subreddit_slug}_comments.csv"
+    
+    #Allow CLI args to override
+    if args.posts_file:
+        posts_file = args.posts_file
+    if args.comments_file:
+        comments_file = args.comments_file
 
-    # Initialize collector
+
+    #Initialize collector
     collector = RedditDataCollector(
         client_id=client_id,
         client_secret=client_secret,
@@ -213,64 +242,73 @@ def main():
         subreddit_name=subreddit_name
     )
 
-# Flair logic (CLI > config > prompt)
-    default_flairs = config["defaults"].get("flairs", "").split(",")
-    target_flairs = (
-        [f.strip() for f in args.flairs.split(",")] if args.flairs else
-        [f.strip() for f in default_flairs if f.strip()]
-    )
-
     if target_flairs:
-        print(f"✅ Using pre-configured flairs: {', '.join(target_flairs)}")
-        # Fetch posts with pre-configured flairs
+        print(f" Using pre-configured flairs: {', '.join(target_flairs)}")
+        #Fetch posts with pre-configured flairs
         posts_data = collector.fetch_posts(
             subreddit_name, target_flairs=target_flairs, limit=25
         )
     else:
-        # Fetch posts first (to discover flairs dynamically)
+        #Fetch posts first (to discover flairs dynamically)
         print(f"\nFetching posts from r/{subreddit_name}...")
         posts_data = collector.fetch_posts(
             subreddit_name, target_flairs=[], limit=25
         )
     
-        # Discover unique flairs and prompt user
-        flairs_in_posts = sorted(
-            set(post['flair'] for post in posts_data if post['flair'])
-        )
+        #Discover unique flairs and prompt user
+    from collections import Counter
+    
+    #Only prompt for flairs if none were pre-configured
+    if not target_flairs:
+        #Count occurrences of each flair
+        flair_counts = Counter(post['flair'] for post in posts_data if post['flair'])
+        flairs_in_posts = sorted(flair_counts.keys())
+    
         if flairs_in_posts:
+            print("\nFound these flairs in the top 25 posts:")
+            for i, flair in enumerate(flairs_in_posts, 1):
+                count = flair_counts[flair]
+                print(f"{i}. {flair} ({count} posts)")
+            #Prompt user ONCE for flair selection
             target_flairs = prompt_user_for_flairs(flairs_in_posts)
         else:
-            print("⚠️ No flairs found in the top posts. Fetching all posts.")
-            target_flairs = []  # No flair filtering
+            print(" No flairs found in the top posts. Fetching all posts.")
+            target_flairs = []  #No flair filtering
+
     
-    # Filter posts again based on selected flairs
+    #Filter posts again based on selected flairs
     if target_flairs:
         filtered_posts_data = [
             post for post in posts_data if post['flair'] in target_flairs
         ]
     else:
         filtered_posts_data = posts_data
+    
+    #Warn user if too few posts for meaningful analysis
+    if len(filtered_posts_data) < 10:
+        print(f"\n⚠️ Warning: Only {len(filtered_posts_data)} posts found after filtering.")
+        print("👉 Consider selecting more flairs or increasing the post limit for better analysis results.")
 
 
-    # Fetch comments
+    #Fetch comments
     comments_data = []
     print("\nFetching comments for each post...")
     for post in filtered_posts_data:
         comments_data.extend(collector.fetch_comments(post['post_id']))
         time.sleep(1)
 
-    # Save data
+    #Save data
     print("\nSaving collected data...")
     collector.save_to_csv(filtered_posts_data, posts_file)
     collector.save_to_csv(comments_data, comments_file)
 
-    print(f"\n✅ Data collection complete.\nPosts saved to {posts_file}\nComments saved to {comments_file}")
+    print(f"\n Data collection complete.\nPosts saved to {posts_file}\nComments saved to {comments_file}")
 
 
 
 
 if __name__ == "__main__":
-    # CLI argument parser
+    #CLI argument parser
     parser = argparse.ArgumentParser(description="Reddit Data Collector")
     parser.add_argument("--subreddit", type=str, help="Subreddit to scrape")
     parser.add_argument("--flairs", type=str, nargs='+', help="List of flairs to filter by")

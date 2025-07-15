@@ -247,6 +247,32 @@ If you encounter timeouts or DNS issues when connecting to Reddit utilizing the 
 
 The script includes an exponential backoff retry mechanism, but unresolved DNS cannot be handled in code.
 
+## Known Issues & Future Improvements
+
+- 🏷 **Flair Handling**
+  - Posts without flairs are included under “allflairs”, which may affect dataset naming and later analysis steps.
+  - Flair names are not currently sanitized for special characters in filenames.
+
+- 📊 **Dataset Size**
+  - Analysis scripts may skip plotting or correlations if the dataset is too small (e.g., <5 posts).
+
+- 🌐 **Rate Limiting**
+  - Reddit API rate limits can slow down comment fetching, especially on large subreddits. Implementing async fetching or better exponential backoff could help.
+
+- 📂 **File Naming Consistency**
+  - Filenames depend on subreddit and flair selections, which can lead to unexpected results if users provide overlapping or ambiguous flairs.
+
+- 🔧 **CLI/Config Flow**
+  - Some command-line arguments override config settings in unexpected ways. Better validation and clearer user prompts are planned.
+
+---
+
+### ✅ Planned Improvements
+- Save plots consistently for all scripts (not just network analysis).
+- Add summary statistics after data collection (e.g., number of posts/comments per flair).
+
+
+
 
 
  

@@ -138,6 +138,8 @@ The script then fetches top posts, and their comments, from the subreddit chosen
 
 The last three scripts produce some plots which will be saved in a dedicated folder for plots and each plot is saved with its name and a time stamp.
 
+For a first time usage I advise using the scripts are they are and each time you'll be prompted to insert the subreddit name upon which the script has to be run; this will create coherence among the files saved and imported. If users want to work only on one subreddit then the info can be inserted in the config.ini file directly.
+
 **For standard Python users** you can run the scripts from your terminal or command prompt, just make sure to be in the root folder of the cloned repository before running the following commands:
 
 ```bash

@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import powerlaw
 from scipy.stats import pearsonr, spearmanr
+import argparse
+import configparser
+import os
 
 from utils import save_plot, categorize_sentiment, load_data
 
@@ -239,10 +242,10 @@ def analyze_top_comments(filtered_comments, N=100):
     print("Top Comments Summary:")
     print(top_summary)
 
-    # Save for further analysis
+    #Save for further analysis
     top_summary.to_csv("top_comments_summary.csv", index=False)
 
-    # Plot engagement vs. sentiment
+    #Plot engagement vs. sentiment
     plt.figure(figsize=(10, 6))
     plt.scatter(top_summary['sentiment_body'], top_summary['score'], color='blue', alpha=0.7)
     plt.title('Engagement vs. Sentiment for Top Comments')
@@ -252,7 +255,7 @@ def analyze_top_comments(filtered_comments, N=100):
     save_plot("Engagement vs. Sentiment for Top Comments","plots/analize_comment_sentiment_plots")
     plt.show()
 
-    # Plot length vs. sentiment
+    #Plot length vs. sentiment
     plt.figure(figsize=(10, 6))
     plt.scatter(top_summary['length'], top_summary['sentiment_body'], color='green', alpha=0.7)
     plt.title('Length vs. Sentiment for Top Comments')
@@ -262,11 +265,11 @@ def analyze_top_comments(filtered_comments, N=100):
     save_plot("Length vs. Sentiment for Top Comments","plots/analize_comment_sentiment_plots")
     plt.show()
 
-    # Calculate Pearson correlation
+    #Calculate Pearson correlation
     correlation, p_value = pearsonr(top_summary['length'], top_summary['sentiment_body'])
     print(f"Pearson Correlation: {correlation:.4f}, P-value: {p_value:.4e}")
 
-    # Calculate Spearman correlation
+    #Calculate Spearman correlation
     spearman_corr, p_value = spearmanr(top_summary['length'], top_summary['sentiment_body'])
     print(f"Spearman Correlation: {spearman_corr:.4f}, P-value: {p_value:.4e}")
     
@@ -301,57 +304,77 @@ def save_filtered_comments(filtered_comments, output_path):
 
 
 def main():
-    # Paths to data files
-    comments_path = "../data/onepiece_comments.csv"
-    output_path = "../data/onepiece_sentiment_comments_filtered.csv"
+   #Load config and CLI arguments
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    
+    parser = argparse.ArgumentParser(description="Analyze sentiment in subreddit comments")
+    parser.add_argument("--subreddit", type=str, help="Subreddit to analyze")
+    parser.add_argument("--comments_file", type=str, help="Path to comments CSV")
+    parser.add_argument("--output_file", type=str, help="Path to save cleaned sentiment comments")
+    args = parser.parse_args()
+    
+    #Resolve subreddit and paths
+    subreddit_name = args.subreddit or config["defaults"].get("subreddit")
+    if not subreddit_name:
+        subreddit_name = input("Enter subreddit to analyze: ").strip()
+        if not subreddit_name:
+            raise ValueError("Subreddit name is required.")
+    
+    subreddit_slug = subreddit_name.lower().replace(" ", "_")
+    
+    #Flairs (optional)
+    default_flairs = config["defaults"].get("flairs", "").split(",")
+    target_flairs = (
+        [f.strip() for f in args.flairs.split(",")] if hasattr(args, "flairs") and args.flairs else
+        [f.strip() for f in default_flairs if f.strip()]
+    )    
+    #Dynamic filenames
+    default_comments_file = f"../data/{subreddit_slug}_comments.csv"
+    default_output_file = f"../data/{subreddit_slug}_sentiment_comments_filtered.csv"
+    
+    comments_path = args.comments_file or config["defaults"].get("comments_output_file") or default_comments_file
+    output_path = args.output_file or config["defaults"].get("comments_cleaned_output_file") or default_output_file
+    
+    print(f" Using comments file: {comments_path}")
+    print(f" Cleaned sentiment data will be saved to: {output_path}")
 
-    # Load comments data
+    #Load comments data
     comments_df = load_data(comments_path)
 
-    # Filter comments
+    #Filter comments
     filtered_comments = filter_comments(comments_df)
 
-    # Initialize sentiment analyzer
+    #Initialize sentiment analyzer
     analyzer = SentimentIntensityAnalyzer()
 
-    # Add sentiment to comments
+    #Add sentiment to comments
     filtered_comments = add_sentiment_to_comments(filtered_comments, analyzer)
 
-    # Plot sentiment distribution
+    #Plot sentiment distribution
     plot_sentiment_distribution(filtered_comments)
 
-    # Add sentiment category
+    #Add sentiment category
     filtered_comments = add_sentiment_category(filtered_comments)
 
-    # Plot engagement by sentiment
+    #Plot engagement by sentiment
     plot_engagement_by_sentiment(filtered_comments)
 
-    # Plot comment scores
+    #Plot comment scores
     plot_comment_scores(filtered_comments)
 
-    # Fit power-law distribution
+    #Fit power-law distribution
     fit_power_law(filtered_comments)
 
-    # Compare distributions
+    #Compare distributions
     compare_distributions(filtered_comments)
 
-    # Analyze top comments
+    #Analyze top comments
     analyze_top_comments(filtered_comments)
 
-    # Save filtered comments
+    #Save filtered comments
     save_filtered_comments(filtered_comments, output_path)
-    USE_GLOBAL_SCOPE = False  # Set to True for Spyder's Variable Explorer
-    
-    if USE_GLOBAL_SCOPE:
-       global df_posts, df_post_metrics, df_sentiment_posts, df_sentiment_clenaed
-       df_comments = comments_df
-       df_filtered_comments = filtered_comments
-    else:
-       df_comments = comments_df
-       df_filtered_comments = filtered_comments
 
    
-
-
 if __name__ == "__main__":
     main()

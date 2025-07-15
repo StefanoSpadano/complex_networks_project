@@ -11,7 +11,9 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import pearsonr, spearmanr
-
+import configparser
+import argparse
+import os
 from utils import save_plot, categorize_sentiment, load_data
 
 
@@ -231,74 +233,100 @@ def save_cleaned_data(sentiment_posts_cleaned, output_path):
 
 
 def main():
-    # Paths to data files
-    posts_path = "../data/onepiece_posts.csv"
-    post_metrics_path = "../data/post_metrics.csv"
-    output_path = "../data/onepiece_sentiment_posts_filtered.csv"
+    #Load config and CLI arguments
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+
+    parser = argparse.ArgumentParser(description="Analyze sentiment in subreddit posts")
+    parser.add_argument("--subreddit", type=str, help="Subreddit to analyze")
+    parser.add_argument("--flairs", type=str, nargs='+', help="List of flairs to filter by (optional)")
+    parser.add_argument("--posts_file", type=str, help="Path to posts CSV")
+    parser.add_argument("--post_metrics_file", type=str, help="Path to post metrics CSV")
+    parser.add_argument("--output_file", type=str, help="Path to save cleaned sentiment data")
+    args = parser.parse_args()
+
+    subreddit_name = args.subreddit or config["defaults"].get("subreddit")
+    if not subreddit_name:
+        subreddit_name = input("Enter subreddit to analyze: ").strip()
+        if not subreddit_name:
+            raise ValueError("Subreddit name is required.")
+    subreddit_slug = subreddit_name.lower().replace(" ", "_")
+
     
-    plt.ioff()  # Turn interactive mode off
+    default_flairs = config["defaults"].get("flairs", "").split(",")
+    target_flairs = (
+        [f.strip() for f in args.flairs] if args.flairs else
+        [f.strip() for f in default_flairs if f.strip()]
+    )
 
 
-    # Load data
+    default_posts_file = f"../data/{subreddit_slug}_posts.csv"
+    posts_path = args.posts_file or config["defaults"].get("posts_output_file") or default_posts_file
+    post_metrics_path = args.post_metrics_file or f"../data/{subreddit_slug}_post_metrics.csv"
+    output_path = args.output_file or f"../data/{subreddit_slug}_sentiment_posts_filtered.csv"
+
+
+    print(f" Using posts file: {posts_path}")
+    print(f" Using post metrics file: {post_metrics_path}")
+    print(f" Cleaned sentiment data will be saved to: {output_path}")
+
+    plt.ioff()  #Turn interactive mode off
+    posts_df = load_data(posts_path)
+    post_metrics = load_data(post_metrics_path)
+
+    #Load data
     posts_df = load_data(posts_path)
     post_metrics =load_data(post_metrics_path)
 
-    # Initialize sentiment analyzer
+    #Initialize sentiment analyzer
     analyzer = SentimentIntensityAnalyzer()
 
-    # Add sentiment to posts
+    #Add sentiment to posts
     posts_df = add_sentiment_to_posts(posts_df, analyzer)
 
-    # Merge post metrics and sentiment data
+    #Merge post metrics and sentiment data
     sentiment_posts = posts_df.merge(post_metrics, on='post_id', how='inner')
 
-    # Clean sentiment data
+    #Clean sentiment data
     sentiment_posts_cleaned = clean_sentiment_data(sentiment_posts)
+    
+    #Check if dataset is too small for analysis
+    if len(sentiment_posts_cleaned) < 5:
+        print(f"\n Dataset too small for plots/correlations ({len(sentiment_posts_cleaned)} rows).")
+        print(" Saving cleaned sentiment data for later scripts...")
+        save_cleaned_data(sentiment_posts_cleaned, output_path)
+        return  #Skip the rest of the analysis
 
-    # Plot sentiment distribution
+    #Plot sentiment distribution
     plot_sentiment_distribution(sentiment_posts_cleaned)
 
-    # Add sentiment category
+    #Add sentiment category
     sentiment_posts_cleaned = add_sentiment_category(sentiment_posts_cleaned)
 
-    # Plot sentiment categories
+    #Plot sentiment categories
     plot_sentiment_categories(sentiment_posts_cleaned)
 
-    # Plot flair sentiment
+    #Plot flair sentiment
     plot_flair_sentiment(sentiment_posts_cleaned)
 
-    # Plot top posts
+    #Plot top posts
     plot_top_posts(sentiment_posts_cleaned)
 
-    # Plot author sentiment
+    #Plot author sentiment
     plot_author_sentiment(sentiment_posts_cleaned)
 
-    # Plot top authors
+    #Plot top authors
     plot_top_authors(sentiment_posts_cleaned)
 
-    # Plot sentiment vs engagement
+    #Plot sentiment vs engagement
     plot_sentiment_vs_engagement(sentiment_posts_cleaned)
     
-    # Calculate correlations
+    #Calculate correlations
     calculate_correlations(sentiment_posts_cleaned)
 
-    # Save cleaned data
+    # ave cleaned data
     save_cleaned_data(sentiment_posts_cleaned, output_path)
-    USE_GLOBAL_SCOPE = False  # Set to True for Spyder's Variable Explorer
-
-    if USE_GLOBAL_SCOPE:
-       global df_posts, df_post_metrics, df_sentiment_posts, df_sentiment_clenaed
-       df_posts = posts_df
-       df_post_metrics = post_metrics
-       df_sentiment_posts = sentiment_posts
-       df_sentiment_cleaned = sentiment_posts_cleaned
-    else:
-       df_posts = posts_df
-       df_post_metrics = post_metrics
-       df_sentiment_posts = sentiment_posts
-       df_sentiment_cleaned = sentiment_posts_cleaned
-
-
+    
 
 if __name__ == "__main__":
     main()

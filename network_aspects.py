@@ -8,7 +8,9 @@ Created on Tue Mar 18 10:21:07 2025
 import pandas as pd
 import networkx as nx
 import numpy as np
-
+import configparser
+import argparse
+import os
 from utils import save_plot, compute_flow_values
 
 
@@ -56,59 +58,62 @@ def preprocess_dataframe(df, required_columns):
     return df
 
 
-def load_and_preprocess_data():
+def load_and_preprocess_data(posts_file, comments_file, filtered_posts_file, filtered_comments_file):
     """
     Load and preprocess all required datasets for network analysis.
-    
+
+    Args:
+        posts_file (str): Path to posts CSV
+        comments_file (str): Path to comments CSV
+        filtered_posts_file (str): Path to filtered posts CSV
+        filtered_comments_file (str): Path to filtered comments CSV
+
     Returns:
         dict: Dictionary containing all loaded and preprocessed DataFrames
-        
+
     Raises:
         SystemExit: If critical data loading fails
     """
-    # Define file paths and their configurations
     data_files = {
         'posts': {
-            'path': "../data/onepiece_posts.csv",
+            'path': posts_file,
             'engine': "python",
             'required_columns': ['author', 'created_utc', 'score']
         },
         'comments': {
-            'path': "../data/onepiece_comments.csv", 
+            'path': comments_file,
             'engine': "python",
             'required_columns': ['author', 'created_utc', 'score']
         },
         'filtered_posts': {
-            'path': "../data/onepiece_sentiment_posts_filtered.csv",
+            'path': filtered_posts_file,
             'lineterminator': "\n",
             'required_columns': ['post_id', 'author_x']
         },
         'filtered_comments': {
-            'path': "../data/onepiece_sentiment_comments_filtered.csv",
-            'lineterminator': "\n", 
+            'path': filtered_comments_file,
+            'lineterminator': "\n",
             'required_columns': ['post_id', 'author', 'sentiment_body']
         }
     }
-    
-    # Load all datasets
+
     datasets = {}
     for name, config in data_files.items():
         path = config.pop('path')
         required_cols = config.pop('required_columns')
-        
-        # Load dataset
+
         df = load_csv(path, **config)
         if df is None:
-            print(f"Failed to load {name} dataset from {path}")
+            print(f" Failed to load {name} dataset from {path}")
             raise SystemExit("Critical data loading failed. Exiting script.")
-            
-        # Preprocess dataset
+
         df = preprocess_dataframe(df, required_cols)
         datasets[name] = df
-        
-        print(f"✓ Loaded and preprocessed {name}: {len(df)} rows")
-    
+
+        print(f" Loaded and preprocessed {name}: {len(df)} rows")
+
     return datasets
+
 
 
 def build_post_centric_graph(posts_df, comments_df):
@@ -122,35 +127,35 @@ def build_post_centric_graph(posts_df, comments_df):
     Returns:
         nx.DiGraph: Directed graph with post-commenter relationships
     """
-    # Initialize directed graph
+    #Initialize directed graph
     graph = nx.DiGraph()
     
-    # Build graph with comment counts
+    #Build graph with comment counts
     for _, post_data in posts_df.iterrows():
         post_id = post_data.get('post_id')
         post_author = post_data.get('author')
         
         if not post_id or not post_author:
-            continue  # Skip invalid data
+            continue  #Skip invalid data
         
-        # Add post author node
+        #Add post author node
         graph.add_node(post_author, type='post_author', comment_count=0)
         
-        # Get all comments for this post
+        #Get all comments for this post
         post_comments = comments_df[comments_df['post_id'] == post_id]
         
-        # Add commenters and edges
+        #Add commenters and edges
         for commenter in post_comments['author']:
             if commenter == '[deleted]':
-                continue  # Skip deleted users
+                continue  #Skip deleted users
             
-            # Add or update commenter node
+            #Add or update commenter node
             if commenter not in graph:
                 graph.add_node(commenter, type='commenter', comment_count=1)
             else:
                 graph.nodes[commenter]['comment_count'] += 1
             
-            # Add edge from post author to commenter
+            #Add edge from post author to commenter
             graph.add_edge(post_author, commenter, weight=1)
     
     return graph
@@ -168,18 +173,18 @@ def compute_graph_metrics(graph):
     """
     metrics = {}
     
-    # Basic graph metrics
+    #Basic graph metrics
     metrics['num_nodes'] = graph.number_of_nodes()
     metrics['num_edges'] = graph.number_of_edges()
     
-    # Degree metrics
+    #Degree metrics
     degrees = dict(graph.degree())
     if degrees:
         max_degree_node = max(degrees, key=degrees.get)
         metrics['max_degree_node'] = max_degree_node
         metrics['max_degree_value'] = degrees[max_degree_node]
     
-    # Centrality measures
+    #Centrality measures
     try:
         metrics['centrality'] = {
             'degree': nx.degree_centrality(graph),
@@ -187,11 +192,11 @@ def compute_graph_metrics(graph):
             'closeness': nx.closeness_centrality(graph)
         }
         
-        # Create centrality DataFrame for analysis
+        #Create centrality DataFrame for analysis
         centrality_df = pd.DataFrame(metrics['centrality'])
         metrics['centrality_df'] = centrality_df
         
-        # Degree centrality statistics
+        #Degree centrality statistics
         degree_centralities = list(metrics['centrality']['degree'].values())
         metrics['degree_stats'] = {
             'mean': np.mean(degree_centralities),
@@ -256,12 +261,12 @@ def build_bipartite_graph(filtered_posts, filtered_comments):
     """
     bi_graph = nx.Graph()
     
-    # Add post nodes and commenter connections
+    #Add post nodes and commenter connections
     for _, post_data in filtered_posts.iterrows():
         post_id = post_data['post_id']
         post_author = post_data['author_x']
         
-        # Add post node
+        #Add post node
         bi_graph.add_node(
             post_id,
             bipartite=0,
@@ -269,12 +274,12 @@ def build_bipartite_graph(filtered_posts, filtered_comments):
             type='post'
         )
         
-        # Get commenters for this post
+        #Get commenters for this post
         post_comments = filtered_comments[filtered_comments['post_id'] == post_id]
         
         for commenter in post_comments['author']:
             if commenter != '[deleted]':
-                # Add commenter node
+                #Add commenter node
                 bi_graph.add_node(
                     commenter,
                     bipartite=1,
@@ -299,14 +304,14 @@ def visualize_bipartite_graph(bi_graph, title="Bipartite Graph Layout"):
     """
     import matplotlib.pyplot as plt
     
-    # Generate layout
+    #Generate layout
     pos = nx.spring_layout(bi_graph)
     
-    # Separate node types
+    #Separate node types
     post_nodes = [n for n, d in bi_graph.nodes(data=True) if d['type'] == 'post']
     commenter_nodes = [n for n, d in bi_graph.nodes(data=True) if d['type'] == 'commenter']
     
-    # Create visualization
+    #Create visualization
     plt.figure(figsize=(12, 12))
     nx.draw_networkx_nodes(bi_graph, pos, nodelist=post_nodes, 
                           node_color='red', node_size=100, label='Posts')
@@ -336,12 +341,12 @@ def visualize_bipartite_with_sentiment(bi_graph, filtered_comments, pos,
     
     plt.figure(figsize=(15, 15))
     
-    # Prepare edge colors and opacities based on sentiment
+    #Prepare edge colors and opacities based on sentiment
     edge_colors = []
     edge_opacities = []
     
     for u, v in bi_graph.edges():
-        # Find sentiment for this edge (post_id, commenter)
+        #Find sentiment for this edge (post_id, commenter)
         sentiment_data = filtered_comments.loc[
             (filtered_comments['post_id'] == u) & (filtered_comments['author'] == v),
             'sentiment_body'
@@ -352,7 +357,7 @@ def visualize_bipartite_with_sentiment(bi_graph, filtered_comments, pos,
         
         sentiment_value = sentiment_data.values[0]
         
-        # Color based on sentiment
+        #Color based on sentiment
         if sentiment_value > 0:
             edge_colors.append('green')
         elif sentiment_value < 0:
@@ -360,10 +365,10 @@ def visualize_bipartite_with_sentiment(bi_graph, filtered_comments, pos,
         else:
             edge_colors.append('gray')
         
-        # Opacity based on sentiment strength
+        #Opacity based on sentiment strength
         edge_opacities.append(min(1, max(0.1, abs(sentiment_value))))
     
-    # Draw nodes
+    #Draw nodes
     post_nodes = [n for n, d in bi_graph.nodes(data=True) if d['type'] == 'post']
     commenter_nodes = [n for n, d in bi_graph.nodes(data=True) if d['type'] == 'commenter']
     
@@ -372,7 +377,7 @@ def visualize_bipartite_with_sentiment(bi_graph, filtered_comments, pos,
     nx.draw_networkx_nodes(bi_graph, pos, nodelist=commenter_nodes, 
                           node_color='blue', node_size=50, label='Commenters')
     
-    # Draw edges with sentiment colors
+    #Draw edges with sentiment colors
     for (u, v), color, opacity in zip(bi_graph.edges(), edge_colors, edge_opacities):
         nx.draw_networkx_edges(
             bi_graph,
@@ -400,7 +405,7 @@ def detect_communities_louvain(graph):
     """
     from community import community_louvain
     
-    # Apply the Louvain method for community detection
+    #Apply the Louvain method for community detection
     partition = community_louvain.best_partition(graph, weight='weight')
     
     return partition
@@ -416,7 +421,7 @@ def analyze_central_nodes(graph, percentile=90):
     Returns:
         dict: Dictionary containing central nodes analysis
     """
-    # Extract degree centrality values
+    #Extract degree centrality values
     degree_centrality = nx.degree_centrality(graph)
     if not degree_centrality:
         return {
@@ -427,7 +432,7 @@ def analyze_central_nodes(graph, percentile=90):
     degree_values = list(degree_centrality.values())
     threshold = np.percentile(degree_values, percentile)
     
-    # Filter nodes based on threshold
+    #Filter nodes based on threshold
     central_nodes = [node for node, centrality in degree_centrality.items() 
                     if centrality >= threshold]
     
@@ -449,20 +454,25 @@ def visualize_central_nodes(graph, percentile=90, layout=None, title="Graph High
     """
     import matplotlib.pyplot as plt
 
-    # Compute degree centrality and threshold
+    #Compute degree centrality and threshold
     degree_centrality = nx.degree_centrality(graph)
     degree_values = list(degree_centrality.values())
+    
+    if not degree_values:
+        print("Graph is empty. Skipping centrality analysis.")
+        return  #Exit this function early
+
     threshold = np.percentile(degree_values, percentile)
     central_nodes = [node for node, val in degree_centrality.items() if val >= threshold]
 
-    # Assign node colors and sizes
+    #Assign node colors and sizes
     node_colors = ["red" if node in central_nodes else "gray" for node in graph.nodes()]
     node_sizes = [1000 if node in central_nodes else 10 for node in graph.nodes()]
 
     if layout is None:
         layout = nx.spring_layout(graph, seed=42)
 
-    # Plot
+    #Plot
     plt.figure(figsize=(15, 15))
     nx.draw(
         graph,
@@ -490,16 +500,16 @@ def visualize_central_subgraph_with_communities(graph, partition, percentile=90,
     """
     import matplotlib.pyplot as plt
 
-    # Compute central nodes
+    #Compute central nodes
     degree_centrality = nx.degree_centrality(graph)
     degree_values = list(degree_centrality.values())
     threshold = np.percentile(degree_values, percentile)
     central_nodes = [n for n, c in degree_centrality.items() if c >= threshold]
 
-    # Subgraph
+    #Subgraph
     subgraph = graph.subgraph(central_nodes)
 
-    # Community color map
+    #Community color map
     community_colors = [partition[n] for n in subgraph.nodes()]
 
     if layout is None:
@@ -538,14 +548,14 @@ def plot_centrality_distributions(graph, central_nodes, title_suffix="Central No
 
     plt.figure(figsize=(14, 6))
 
-    # Betweenness
+    #Betweenness
     plt.subplot(1, 2, 1)
     plt.hist(central_betweenness, bins=30, color='skyblue', edgecolor='black')
     plt.title(f'Betweenness Centrality of {title_suffix}')
     plt.xlabel('Betweenness Centrality')
     plt.ylabel('Frequency')
 
-    # Closeness
+    #Closeness
     plt.subplot(1, 2, 2)
     plt.hist(central_closeness, bins=30, color='salmon', edgecolor='black')
     plt.title(f'Closeness Centrality of {title_suffix}')
@@ -578,21 +588,21 @@ def plot_comment_distributions(graph, central_nodes, title_suffix="High Centrali
         elif node_type == 1:
             commenter_comment_counts[node] = degree
 
-    # Extract only central nodes' values
+    #Extract only central nodes' values
     high_centrality_posts = [post_comment_counts[n] for n in central_nodes if n in post_comment_counts]
     high_centrality_commenters = [commenter_comment_counts[n] for n in central_nodes if n in commenter_comment_counts]
 
-    # Plot distributions
+    #Plot distributions
     plt.figure(figsize=(14, 6))
 
-    # Post comments
+    #Post comments
     plt.subplot(1, 2, 1)
     plt.hist(high_centrality_posts, bins=30, color='blue', edgecolor='black')
     plt.title(f'Distribution of Comments on {title_suffix} Posts')
     plt.xlabel('Number of Comments')
     plt.ylabel('Frequency')
 
-    # Commenter activity
+    #Commenter activity
     plt.subplot(1, 2, 2)
     plt.hist(high_centrality_commenters, bins=30, color='green', edgecolor='black')
     plt.title(f'Distribution of Comments by {title_suffix} Commenters')
@@ -1000,19 +1010,19 @@ def visualize_communities(graph, partition, highlight_nodes=None, title="Comment
     """
     import matplotlib.pyplot as plt
 
-    # Generate color map
+    #Generate color map
     communities = list(set(partition.values()))
     color_map = plt.cm.get_cmap("rainbow", len(communities))
     community_colors = {comm: color_map(i) for i, comm in enumerate(communities)}
     node_colors = [community_colors[partition[n]] for n in graph.nodes()]
 
-    # Determine node sizes
+    #Determine node sizes
     if highlight_nodes:
         node_sizes = [100 if n in highlight_nodes else 30 for n in graph.nodes()]
     else:
         node_sizes = 30
 
-    # Draw
+    #Draw
     plt.figure(figsize=(12, 12))
     pos = nx.spring_layout(graph, seed=42)
     nx.draw_networkx(
@@ -1047,7 +1057,7 @@ def analyze_top_influencers(graph, top_n=500):
     print(f"Top Commenters Subgraph: {subgraph.number_of_nodes()} nodes, {subgraph.number_of_edges()} edges")
 
     betweenness = nx.betweenness_centrality(subgraph)
-    eigenvector = nx.eigenvector_centrality(subgraph)
+    eigenvector = nx.eigenvector_centrality(subgraph, max_iter=1000, tol=1e-06)
 
     top_degree = top_nodes[:5]
     top_betweenness = sorted(betweenness.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -1148,26 +1158,72 @@ def visualize_sentiment_flow(matrix, title="Sentiment Flow Matrix Heatmap"):
     plt.show()
 
 
-
-def main():
     
-    # Sostituisce tutte le righe originali di caricamento
-    datasets = load_and_preprocess_data()
+def main():
+    #Load config and CLI arguments
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    
+    parser = argparse.ArgumentParser(description="Analyze subreddit network aspects")
+    parser.add_argument("--subreddit", type=str, help="Subreddit to analyze")
+    args = parser.parse_args()
+    
+    subreddit_name = args.subreddit or config["defaults"].get("subreddit")
+    if not subreddit_name:
+        subreddit_name = input("Enter subreddit for network analysis: ").strip()
+        if not subreddit_name:
+            raise ValueError("Subreddit name is required.")
+    
+    subreddit_slug = subreddit_name.lower().replace(" ", "_")
+    
+    #Flairs (optional)
+    default_flairs = config["defaults"].get("flairs", "").split(",")
+    target_flairs = (
+        [f.strip() for f in args.flairs.split(",")] if hasattr(args, "flairs") and args.flairs else
+        [f.strip() for f in default_flairs if f.strip()]
+    )    
+    #Dynamic filenames
+    posts_file = f"../data/{subreddit_slug}_posts.csv"
+    comments_file = f"../data/{subreddit_slug}_comments.csv"
+    filtered_posts_file = f"../data/{subreddit_slug}_sentiment_posts_filtered.csv"
+    filtered_comments_file = f"../data/{subreddit_slug}_sentiment_comments_filtered.csv"
+    
+    #Check if filtered files exist BEFORE printing paths or trying to load
+    if not os.path.exists(filtered_posts_file) or not os.path.exists(filtered_comments_file):
+        print("\n Filtered sentiment files not found!")
+        print("Run analize_sentiment.py and analize_comment_sentiment.py first to generate them.")
+        raise SystemExit("Missing required sentiment files.")
+    
+    #Safe to print and load
+    print(f" Loading posts: {posts_file}")
+    print(f" Loading comments: {comments_file}")
+    print(f" Loading filtered posts: {filtered_posts_file}")
+    print(f" Loading filtered comments: {filtered_comments_file}")
+    
+    #Load and preprocess all datasets
+    datasets = load_and_preprocess_data(posts_file, comments_file, filtered_posts_file, filtered_comments_file)
     posts_df = datasets['posts']
-    comments_df = datasets['comments'] 
+    comments_df = datasets['comments']
     filtered_posts = datasets['filtered_posts']
     filtered_comments = datasets['filtered_comments']
     
-    # Sostituisce tutto il blocco di costruzione grafo + analisi
+    #Graph building + analysis
     post_centric_graph = build_post_centric_graph(posts_df, comments_df)
     metrics = compute_graph_metrics(post_centric_graph)
     print_graph_analysis(metrics)
     
-    # Dopo il blocco esistente, aggiungi:
+    #bi_graph definition and position of the nodes definition
     bi_graph_filtered_data = build_bipartite_graph(filtered_posts, filtered_comments)
     pos = visualize_bipartite_graph(bi_graph_filtered_data, "Refined Bipartite Graph Layout")
     
-    # Visualizza con sentiment
+    #After building bipartite graph
+    if bi_graph_filtered_data.number_of_nodes() < 5:
+        print(f"\n⚠️ Graph too small for meaningful analysis ({bi_graph_filtered_data.number_of_nodes()} nodes).")
+        print("✅ Skipping plots and metrics. Consider scraping a larger dataset.")
+        return  # Exit early
+
+    
+    #Sentiment visualization
     visualize_bipartite_with_sentiment(bi_graph_filtered_data, filtered_comments, pos,
                                   "Bipartite Graph with Sentiment Weights (Colored Edges)")
     
@@ -1189,12 +1245,12 @@ def main():
 
     plot_comment_distributions(bi_graph_filtered_data, central_nodes)
     
-    # Analisi engagement post
+    #Post's engagement analysis
     engagement_stats = analyze_post_engagement(filtered_comments)
     print("High Engagement Post Summary:")
     print(engagement_stats.head())
 
-    # Heatmap (opzionale)
+    #Heatmap
     plot_comment_heatmap(filtered_comments)
     
     top_commenters_list = get_top_commenters(filtered_comments, top_k=20)
@@ -1202,16 +1258,16 @@ def main():
 
     mini_cluster_graph = visualize_largest_cluster(commenter_network)
     
-    # 1. Calcolo centralità nel mini-cluster
+    #Mini cluster centrality 
     compute_mini_cluster_centrality(mini_cluster_graph)
 
-    # 2. Post condivisi tra membri del mini-cluster
+    #Shared posts among the mini-cluster members
     cluster_nodes = set(mini_cluster_graph.nodes())
     identify_shared_posts(filtered_comments, filtered_posts, cluster_nodes)
     
     plot_sentiment_distribution(filtered_comments, cluster_nodes)
     
-    # Costruisci grafo commenter-commenter
+    #Commenter-commenter graph building
     commenter_graph = nx.Graph()
     for post_id, group in filtered_comments.groupby('post_id'):
         commenters = group['author'].unique()
@@ -1222,26 +1278,26 @@ def main():
                     commenter_graph.add_edge(u, v, weight=0)
                 commenter_graph[u][v]['weight'] += 1
 
-    # Assegna sentimenti iniziali
+    #Assign initial sentiments
     assign_initial_sentiments(filtered_comments, commenter_graph)
 
-    # Propagazione
+    #Sentiment propagation
     sentiment_evolution = propagate_sentiments(commenter_graph, max_steps=50)
 
-   # Visualizzazione evoluzione
+    #Visualiza evolution of sentiments
     plot_sentiment_evolution(sentiment_evolution)
     
-    # Shift pesi per community detection
+    #Weights shift for community detection as weights cannot be negative with the used algorithm
     shifted_graph = shift_edge_weights(commenter_graph)
 
-    # Louvain community detection
+    #Louvain community detection
     from community import community_louvain
     partition = community_louvain.best_partition(shifted_graph)
 
-    # Assegna attributo 'community'
+    #Assign 'community' attribute
     nx.set_node_attributes(commenter_graph, partition, name='community')
 
-    # Analizza distribuzione dei sentimenti per comunità
+    #Analyze sentiments distribution per community
     sentiment_counts = analyze_community_sentiments(commenter_graph, partition)
     print_community_sentiments(sentiment_counts)
     
@@ -1256,27 +1312,27 @@ def main():
         influencers["degree"] + influencers["betweenness"] + influencers["eigenvector"] + top_sentiment_influencers
     )}
 
-    # Highlight influencer nodes in subgraph
+    #Highlight influencer nodes in subgraph
     visualize_communities(
         influencers["subgraph"],
-        partition,  # Same partition as main graph
+        partition,  #Same partition as main graph
         highlight_nodes=top_nodes,
         title="Top Nodes Highlighted by Community"
     )
     
-    # Calcolo modularità
+    #Compute modularity to check if the community detection algorithm worked properly
     modularity = compute_modularity(commenter_graph, partition)
     print(modularity)
 
-    # Calcolo sentiment flow
+    #Compute sentiment flow
     sentiment_flow_matrix = compute_sentiment_flow_matrix(commenter_graph, partition)
     print("Sentiment Flow Matrix:")
     print(sentiment_flow_matrix)
 
-    # Visualizzazione heatmap
+    #Heatmap visualization
     visualize_sentiment_flow(sentiment_flow_matrix)
 
-    # Calcolo flussi inter e intra
+    #Compute inter and intra community fluxes
     inter_flows, intra_flows = compute_flow_values(sentiment_flow_matrix)
 
     print("Top Inter-Community Flows:")

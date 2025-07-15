@@ -5,15 +5,15 @@ A network and sentiment analysis project based on user interactions in the r/One
 ![Buggy](images/buggy.jpg)
 
 ## Description
-This project aims at studying the network dynamics of a subreddit online. The subreddit chosen is the OnePiece subreddit and in order to study user engagement, user sentiments and network dynamics some python libraries have been used such as PRAW, Pandas, VADER Sentiment Analysis and Networkx. 
+This project aims at studying the network dynamics of a subreddit online. The subreddit chosen from the start was the the OnePiece subreddit but later on the project was extended to ask the user to prompt the subreddit to analyze. In order to study user engagement, user sentiments and network dynamics some python libraries have been used such as PRAW, Pandas, VADER Sentiment Analysis and Networkx. 
 
-This project explores the dynamics of social interactions and sentiment propagation within the r/OnePiece subreddit through network analysis. Sentiment analysis to classify textual data into positive, negative and neutral has been performed gathering data from posts and comments from the aforementioned subreddit. Two kinds of network were constructed and studied: a bipartite graph linking posts and commenters and a network made of commenters only highlighting shared activities within the subreddit. 
+This project explores the dynamics of social interactions and sentiment propagation within a subreddit through network analysis. Sentiment analysis to classify textual data into positive, negative and neutral has been performed gathering data from posts and comments from a subreddit. Two kinds of network were constructed and studied: a bipartite graph linking posts and commenters and a network made of commenters only highlighting shared activities within the subreddit. 
 
 Key analysis investigated were community detection, centrality measures and sentiment propagation modelling; distinct clusters were identified and some of them show a notable inter-community sentiment flow visualized through a heatmap. 
 
 This small study demonstrates how network analysis can help understand real-world social data derived from online interactions.
 
-This project lays a foundation for further targeted investigations into specific aspects, such as temporal dynamics of sentiment during key One Piece events. It still comes with some limitations such as a limited size for the number of posts obtained, limited perspectives that may be due to the analysis of only one subreddit about this topic, the parameters for the sentiment propagation model were chosen in heuristic way and the sentiment analysis tool is lexicon based. 
+This project lays a foundation for further targeted investigations into specific aspects, such as temporal dynamics of sentiment during key events. It still comes with some limitations such as a limited size for the number of posts obtained, limited perspectives that may be due to the analysis of only one subreddit at time, the parameters for the sentiment propagation model were chosen in heuristic way and the sentiment analysis tool is lexicon based. 
 
 ---
 

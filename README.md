@@ -131,16 +131,14 @@ Scripts can be run individually to perform different stages of the analysis but 
 ```bash
 python data_collection.py --subreddit OnePiece --flairs Theory,Analysis
 ```
-or you can launch it as it is; then if you filled the flairs and subreddit name spaces in the config.ini file then those will be used otherwise they will be asked to the user.
-The script fetches top posts and dynamically shows the flairs avalaible in those posts and lets you select the flairs to filter the dataset.
+For a first time usage you can launch it as it is without filling the [defaults] placeholders and the script will ask the user to insert manually the subreddit name and then let you pick the flairs obtained from that fetch; if you filled the flairs and subreddit name spaces in the config.ini file then those will be used.
+The script then fetches top posts, and their comments, from the subreddit chosen.
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;
 - network_aspects.py: takes care of visualization of the two different types of network and their features.
 
 The last three scripts produce some plots which will be saved in a dedicated folder for plots and each plot is saved with its name and a time stamp.
-
-**For Anaconda and Spyder users** you can simply open each script in Spyder and run it pressing F5, just make sure to activate the correct environment before.
 
 **For standard Python users** you can run the scripts from your terminal or command prompt, just make sure to be in the root folder of the cloned repository before running the following commands:
 

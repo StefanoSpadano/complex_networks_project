@@ -26,6 +26,8 @@ This project lays a foundation for further targeted investigations into specific
 
 - [Examples](#examples)
 
+- [Tests](tests)
+
 ---
 
 ## Installation
@@ -97,18 +99,40 @@ After submitting these spaces you will get access to:
 - Client secret (a long alphanumeric string).
 
 
-A config.py file is needed to store your Reddit credentials to start the data scraping process using the PRAW library. Create a python file naming it "config.py" and save it in the project folder then proceed to add your credentials just retrieved into it in the following way:
-## config.py
-REDDIT_CLIENT_ID = "your-client-id"
+To configure the project, copy the provided sample_config.ini file to config.ini, make sure you are in the root folder of the cloned repository (the one containing sample_config.ini) before running:
 
-REDDIT_CLIENT_SECRET = "your-client-secret"
+```bash
+cp sample_config.ini config.ini
+```
 
-REDDIT_USER_AGENT = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
+This will create a new file called config.ini pre-filled with placeholder values. Open it in a text editor and replace the placeholders with your Reddit API credentials.
+
+## config.ini
+client_id = "your-client-id"
+
+client_secret = "your-client-secret"
+
+user_agent = "your-user-agent" **Here you should insert the name of your app followed by " by /u/yourusername"**
+
+subreddit = "the name of the subreddit you'd like to scrape"
+
+flairs = "flairs you are interested in"
+
+post_output_file = "../path/to/your/post/file.csv"
+
+comment_output_file = "../path/to/yout/comment/file.csv"
+
+If the subreddit and flairs fields are left empty then the user will be asked to insert them when launching the data_collection.py file. The user can insert them when having a default subreddit to scrape. The paths are created if they are not already present and named after the subreddit chosen.
 
 ## Usage 
 Scripts can be run individually to perform different stages of the analysis but the first time you try to launch them they must be run in the shown order as the first two scripts are responsible for data collection and manipulation of dataframes obtained.
 
-- data_collection.py: collects posts and comments from the subreddit saving them in a folder called data;
+- data_collection.py: can be used with a command line argument specifying subreddit and flairs when launching the script:
+```bash
+python data_collection.py --subreddit OnePiece --flairs Theory,Analysis
+```
+or you can launch it as it is; then if you filled the flairs and subreddit name spaces in the config.ini file then those will be used otherwise they will be asked to the user.
+The script fetches top posts and dynamically shows the flairs avalaible in those posts and lets you select the flairs to filter the dataset.
 - analize_metrics.py: calculates some metrics such as number of comments, number of upvotes and number of unique commenters;
 - analize_sentiment.py: investigates sentiment distribution across posts;
 - analize_comment_sentiment.py: investigates comment's sentiment for each post;
@@ -133,12 +157,25 @@ python network_aspects.py
 ```bash
 python data_collection.py
 
-It appears that you are using PRAW in an asynchronous environment.
-It is strongly recommended to use Async PRAW: https://asyncpraw.readthedocs.io.
-See https://praw.readthedocs.io/en/latest/getting_started/multiple_instances.html#discord-bots-and-asynchronous-environments for more info.
+Fetching posts from r/OnePiece...
+
+Found these flairs in the top 25 posts:
+1. Analysis
+2. Cosplay
+3. Current Chapter
+4. Discussion
+5. Fanart
+6. Media
+
+Enter flairs to include (e.g., 1,3 or type names, press Enter for all): 1, 3, 4
+
+Fetching comments for each post...
 
 Saving collected data...
-Data collection complete. Posts and comments have been saved.
+
+✅ Data collection complete.
+Posts saved to ../data/onepiece_posts.csv
+Comments saved to ../data/onepiece_comments.csv
 ```
 
 2. analize_metrics.py
@@ -170,6 +207,47 @@ Metrics DataFrames saved.
 5. network_aspects.py
 
 ![Bipartite graph with sentiment weights](images/Bipartite_Graph_with_Sentiment_Weights.png)
+
+## Tests
+I developed a suite of tests to verfy the correctness and functionalities exploited in the last scripts. Tests can be run with the following command, just remember to be in the root folder of the project:
+```bash
+python -m pytest tests
+```
+or if you are interested in a specific module:
+```bash
+python -m pytest tests\test_data_collection.py
+```
+## 🛠 What the Tests Cover
+
+### ✅ Data Collection
+- Verifies saving posts/comments to CSV works correctly.
+- Handles empty datasets gracefully.
+- Ensures flair selection behaves as expected.
+
+### ✅ Sentiment Analysis
+- Tests sentiment computation even for edge cases (e.g., empty text, constant sentiment).
+- Checks cleaned sentiment data merges properly with post metrics.
+
+### ✅ Network Analysis
+- Validates graph creation and metric calculations for small datasets.
+- Ensures community detection and centrality measures run without errors.
+
+---
+
+### ⚠ Notes
+- Make sure to set up the Python environment (`requirements.txt`) before running tests.
+- Some tests use **temporary directories** and **mock Reddit API calls**, so **no live Reddit requests** are made during testing.
+- If you add or change scripts, update or add tests in the `tests/` directory accordingly.
+
+
+## Issues encountered while testing on macOS
+
+If you encounter timeouts or DNS issues when connecting to Reddit utilizing the first script data_collection.py:
+- Try pinging Reddit from your terminal: `ping reddit.com` and check if you see something like 'Request timeout' or '0 packs receveid'.
+- If so, a workaround that worked for me was switching DNS from my wi-fi settings to 8.8.8.8 (Google DNS).
+
+
+The script includes an exponential backoff retry mechanism, but unresolved DNS cannot be handled in code.
 
 
 

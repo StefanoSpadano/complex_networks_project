@@ -256,8 +256,9 @@ def test_save_to_csv_creates_file():
         # Construct a full file path inside the temporary directory
         filepath = os.path.join(tmpdir, 'test_output.csv')
 
-        # Call the static method to save data to CSV
-        RedditDataCollector.save_to_csv(sample_data, filepath)
+        collector = RedditDataCollector("id", "secret", "agent", "subreddit")
+        collector.save_to_csv(sample_data, filepath)
+
 
         # Check if the file now exists at the specified location
         assert os.path.exists(filepath), "CSV file was not created"
@@ -284,7 +285,8 @@ def test_empty_data_when_saving_to_csv(tmp_path):
     file_path = tmp_path / "empty.csv"
 
     # Act: Attempt to save empty data
-    RedditDataCollector.save_to_csv(empty_data, file_path)
+    collector = RedditDataCollector("id", "secret", "agent", "subreddit")
+    collector.save_to_csv(empty_data, file_path)
 
     # Assert: File is created and contains only headers (i.e., empty file or just newline)
     with open(file_path, 'r') as f:

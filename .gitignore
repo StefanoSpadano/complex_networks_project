@@ -1,4 +1,4 @@
-# Ignore the config.py file (contains sensitive credentials)
+# Ignore the config.ini file (contains sensitive credentials)
 
 config.ini
 

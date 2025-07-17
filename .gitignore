@@ -1,4 +1,5 @@
 # Ignore the config.py file (contains sensitive credentials)
+
 config.ini
 
 # Ignore the data folder (optional, if you don't want to track data files)

@@ -51,6 +51,11 @@ def test_categorize_sentiment():
     # Test positive score
     assert categorize_sentiment(0.5) == 'Positive'
 
+def test_categorize_sentiment_edges():
+    assert categorize_sentiment(-0.10000001) == 'Negative'
+    assert categorize_sentiment(-0.09999999) == 'Neutral'
+    assert categorize_sentiment(0.09999999) == 'Neutral'
+    assert categorize_sentiment(0.10000001) == 'Positive'
 
 def test_compute_flow_values():
     """
@@ -74,3 +79,26 @@ def test_compute_flow_values():
     assert (0, 5) in intra_flows
     assert len(inter_flows) == 3
     assert len(intra_flows) == 3
+
+def test_compute_flow_values_edge_cases():
+    # Test 1: Empty matrix
+    empty_matrix = np.array([[]])
+    with pytest.raises(ValueError, match="empty"):
+        compute_flow_values(empty_matrix)
+
+    # Test 2: Non-square matrix (e.g., 2x3)
+    nonsquare_matrix = np.array([[1, 2, 3], [4, 5, 6]])
+    with pytest.raises(ValueError, match="square"):
+        compute_flow_values(nonsquare_matrix)
+
+    # Test 3: 1x1 matrix
+    matrix_1x1 = np.array([[0.7]])
+    inter_flows, intra_flows = compute_flow_values(matrix_1x1)
+    assert inter_flows == []
+    assert intra_flows == [(0, 0.7)]
+
+    # Test 4: All-zero matrix
+    zero_matrix = np.zeros((3, 3))
+    inter_flows, intra_flows = compute_flow_values(zero_matrix)
+    assert inter_flows == []
+    assert intra_flows == [(0, 0.0), (1, 0.0), (2, 0.0)]

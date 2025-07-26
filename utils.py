@@ -58,36 +58,42 @@ def categorize_sentiment(score, threshold=0.1, epsilon=1e-18):
 
 
 def compute_flow_values(matrix):
-     """
-     Compute inter-community and intra-community flow values.
-     
-     Args:
-         matrix (np.ndarray): The sentiment flow matrix.
-     
-     Returns:
-         tuple: A tuple containing two lists:
-             - inter_flows: List of (i, j, flow) for inter-community flows.
-             - intra_flows: List of (i, flow) for intra-community flows.
-     """
-     num_communities = matrix.shape[0]
-     inter_flows = []
-     intra_flows = []
- 
-     for i in range(num_communities):
-         for j in range(num_communities):
-             if i == j:
-                 # Intra-community flow
-                 intra_flows.append((i, matrix[i, j]))
-             else:
-                 # Inter-community flow
-                 if matrix[i, j] > 0:
-                     inter_flows.append((i, j, matrix[i, j]))
- 
-     # Sort flows by value in descending order
-     inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
-     intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
- 
-     return inter_flows, intra_flows
+    """
+    Compute inter-community and intra-community flow values.
+
+    Args:
+        matrix (np.ndarray): The sentiment flow matrix.
+
+    Returns:
+        tuple: A tuple containing two lists:
+            - inter_flows: List of (i, j, flow) for inter-community flows.
+            - intra_flows: List of (i, flow) for intra-community flows.
+
+    Raises:
+        ValueError: If the matrix is empty or not square.
+    """
+    if matrix.size == 0:
+        raise ValueError("Input matrix is empty.")
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("Input matrix must be square (NxN).")
+
+    num_communities = matrix.shape[0]
+    inter_flows = []
+    intra_flows = []
+
+    for i in range(num_communities):
+        for j in range(num_communities):
+            if i == j:
+                intra_flows.append((i, matrix[i, j]))
+            else:
+                if matrix[i, j] > 0:
+                    inter_flows.append((i, j, matrix[i, j]))
+
+    inter_flows = sorted(inter_flows, key=lambda x: x[2], reverse=True)
+    intra_flows = sorted(intra_flows, key=lambda x: x[1], reverse=True)
+
+    return inter_flows, intra_flows
+
 
 
 def load_data(path):

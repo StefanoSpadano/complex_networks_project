@@ -81,6 +81,11 @@ def test_compute_flow_values():
     assert len(intra_flows) == 3
 
 def test_compute_flow_values_edge_cases():
+    """
+    Given some different matrics covering edge cases,
+    when the function to compute flow values is called,
+    then the corresponding errors should be raised.
+    """
     # Test 1: Empty matrix
     empty_matrix = np.array([[]])
     with pytest.raises(ValueError, match="empty"):

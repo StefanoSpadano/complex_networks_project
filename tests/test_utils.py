@@ -8,6 +8,11 @@ import pandas as pd
 import pytest
 
 def test_load_data(tmp_path):
+    """
+    Given a path from where to load the data (in this case a temporary path),
+    when the function load_data is called,
+    then the correct dataframe should be displayed.
+    """
     # Create a mock CSV file in a temporary path
     test_file = tmp_path / "test_data.csv"
     test_data = "col1,col2\n1,a\n2,b\n"
@@ -26,6 +31,11 @@ def test_load_data(tmp_path):
 
 
 def test_categorize_sentiment():
+    """
+    Given a set scores for sentiments,
+    when the categorize sentiment function is called,
+    then the correct sentiments (Positive, Negative and Neutral) should be returned.
+    """
     # Test negative score
     assert categorize_sentiment(-0.5) == 'Negative'
     
@@ -43,14 +53,22 @@ def test_categorize_sentiment():
 
 
 def test_compute_flow_values():
+    """
+    Given a matrix containing numbers,
+    when the function to compute flow values between rows is called,
+    then the corresponding flows should be returned.
+    """
+    #define a matrixs
     matrix = np.array([
         [5, 2, 0],
         [1, 3, 4],
         [0, 0, 2]
     ])
-
+    
+    #call the function
     inter_flows, intra_flows = compute_flow_values(matrix)
-
+    
+    #asserts
     assert (0, 0, 5) not in inter_flows
     assert (1, 2, 4) in inter_flows
     assert (0, 5) in intra_flows

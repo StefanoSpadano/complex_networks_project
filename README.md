@@ -247,6 +247,7 @@ python -m pytest tests\test_data_collection.py
 - Make sure to set up the Python environment (`requirements.txt`) before running tests.
 - Some tests use **temporary directories** and **mock Reddit API calls**, so **no live Reddit requests** are made during testing.
 - If you add or change scripts, update or add tests in the `tests/` directory accordingly.
+- Some early test scripts (e.g., `test_fetch_posts.py`) were kept in the repo for reference, but are not used in the final test suite.
 
 
 ## Issues encountered while testing on macOS

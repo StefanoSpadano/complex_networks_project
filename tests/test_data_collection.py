@@ -10,15 +10,14 @@ import os
 from unittest.mock import patch
 import praw
 from unittest.mock import patch, MagicMock
-from complex_networks_project.data_collection import RedditDataCollector, prompt_user_for_flairs
+import data_collection
+from data_collection import RedditDataCollector, prompt_user_for_flairs
 import argparse
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Add the parent folder (project root) to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import data_collection
 
 
 
